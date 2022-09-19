@@ -1,0 +1,1048 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <title>地墙应力监测值表</title>
+    <!--  @*引用easyUI的CSS*@  -->
+    <link href="../Content/jquery-easyui-1.8.8/themes/icon.css" rel="stylesheet" />
+    <link href="../Content/jquery-easyui-1.8.8/themes/default/easyui.css" rel="stylesheet" />
+    <link href="../Content/Site.css" rel="stylesheet" />
+
+    <!--  @*引用easyUI的JS*@  -->
+    <script src="../Scripts/jquery-1.8.2.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/jquery.easyui.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/locale/easyui-lang-zh_CN.js"></script>
+
+    <!--  @*引用转换时间的JS文件*@  -->
+    <script src="../Content/jquery-easyui-1.8.8/datapattern2.js"></script>
+    <script src="../Scripts/DataDetection.js"></script>
+    <script src="../Scripts/jquery.form.js"></script>
+
+    <script type="text/javascript">
+        function isNotANumber(inputData) {
+            //如果是一个空串或是一个空格，而isNaN是做为数字0进行处理的，而parseInt与parseFloat是返回一个错误消息，这个isNaN检查不严密而导致的。
+            if (parseFloat(inputData).toString() == "NaN") {
+                return false;
+            }
+            return true;
+        }
+        function datetoLocal(value) {
+            return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-MM-dd");
+        }
+        $(function () {
+
+            //首先加载数据显示在表单列表中
+            initGcjcgxTable();
+
+            //实现修改基本信息
+            UpdateGcjcgx();
+
+            //实现添加权限信息
+            AddGcjcgx();
+
+            //设置搜索信息
+            SearchGcjcgx();
+
+            //实现修改基本信息
+            UpdateGcjcgxmx();
+
+            //实现添加信息
+            AddGcjcgxmx();
+
+        });
+
+        //首先加载数据显示在表单列表中
+        function initGcjcgxTable(queryParame) {
+            $('#test').datagrid({
+                title: '数据管理',
+                iconCls: 'icon-save',
+                height: 380,
+                nowrap: true,
+                autoRowHeight: false,
+                striped: true,
+                collapsible: true,
+                url: '/DataDetection/GetQtGcjcdqylShow',
+                sortName: 'jcsj',
+                sortOrder: 'desc',
+                //striped:true,
+                border: true,
+                remoteSort: false,
+                idField: 'id',
+                pagination: true,
+                rownumbers: true,
+                queryParams: queryParame,
+                columns: [[
+                    { field: 'ck', checkbox: true },
+                    { field: 'id', title: 'id', width: 50, sortable: true, hidden: 'true' },
+                    { field: 'gdmc', title: "工地名称", width: 300, sortable: true, },
+                    {
+                        field: 'jcsj', title: "监测时间", width: 150, sortable: true,
+                        formatter: function (value, row, index) {
+                            return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-MM-dd");
+                        }
+                    },
+                    { field: 'gcr', title: '观测者', width: 120, sortable: true },
+                    { field: 'jsr', title: '计算者', width: 120, sortable: true },
+                    { field: 'jhr', title: '校核者', width: 120, sortable: true },
+                    {
+                        field: 'lrsj', title: "添加时间", width: 150, sortable: true,
+                        formatter: function (value, row, index) {
+                            return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-M-d hh:mm:ss");
+                        }
+                    }
+
+                ]],
+
+                toolbar: [{
+                    id: 'btnadd',
+                    text: '添加数据',
+                    iconCls: 'icon-add',
+                    handler: function () {
+                        //实现弹出添加信息的层
+                        ShowCreateGcjcgxDialog();
+                    }
+                }, '-', {
+                    id: 'btndr',
+                    text: '导入数据',
+                    iconCls: 'icon-add',
+                    handler: function () {
+                        //实现弹出导入信息的层
+                        ShowDrGcjcgxDialog();
+                    }
+                }, '-', {
+                    id: 'btncut',
+                    text: '修改数据',
+                    iconCls: 'icon-cut',
+                    handler: function () {
+                        //实现弹出修改信息的层
+                        ShowUpdateGcjcgxDialog();
+                    }
+                }, '-', {
+                    id: 'btnsave',
+                    text: '删除数据',
+                    iconCls: 'icon-remove',
+                    handler: function () {
+                        //确认只删除一条信息
+                        DeleteGcjcgxByClick();
+                    }
+                }]
+            });
+        }
+
+        //实现删除权限的信息
+        function DeleteGcjcgxByClick() {
+            //首先判断用户必须选择数据才能删除
+            var CheckID = $("#test").datagrid('getSelections');
+            if (CheckID.length >= 1) {
+                //构造选择的删除的所有的ID
+                var ids = "";
+                for (var i = 0; i < CheckID.length; i++) {
+                    ids += CheckID[i].id + ",";
+                }
+                ids = ids.substring(0, ids.length - 1);
+
+                //确认删除信息
+                $.messager.confirm("友情提示", "您确认要删除此数据吗？", function (deleteData) {
+                    if (deleteData) {
+                        //发送异步请求
+                        $.post("/DataDetection/DeleteQtGcjcdqyl", { id: ids }, function (data) {
+                            if (data == "OK") {
+                                //实现提示删除成功，刷新表格
+                                $.messager.alert("友情提示", "删除成功");
+                                $("#test").datagrid('reload');
+                                //删除之后，清空上一次选择的信息
+                                $("#test").datagrid('clearSelections');
+                            }
+                            else {
+                                $.messager.alert("友情提示", "删除失败" + data);
+                            }
+                        })
+                    }
+                })
+            }
+            else {
+                $.messager.alert("友情提示", "请选择您要删除的数据");
+            }
+        }
+
+        //弹出导入层
+        function ShowDrGcjcgxDialog() {
+            $("#DrGcjcgxDialog").dialog('open').dialog('setTitle', "导入数据");
+
+            //当再次添加的时候清空文本框里面的值
+            ClearTextBoxSecond();
+        }
+
+        // 导入Excel
+        function importExcel() {
+            $('#file-form').ajaxSubmit({
+                type: 'POST', // HTTP请求方式
+                url: 'ImportExcel?type=dqyl&gdmc=' + $("#gdmc").val() + '&gcr=' + $("#gcr").val() + '&jsr=' + $("#jsr").val() + '&jhr=' + $("#jhr").val() + '&jcsj=' + $("#jcsj").val() + '', // 请求的URL地址
+                dataType: 'json', // 服务器返回数据转换成的类型
+                success: function (data, responseStatus) {
+                    var msg = '';
+                    if (data == 1 || data == '1') {
+                        //关闭层，刷新表单
+                        $("#DrGcjcgxDialog").dialog('close');
+                        $("#test").datagrid('reload');
+                    } else if (data == -1 || data == '-1') {
+                        $.messager.alert("友情提示", "请上传文件，请您检查");
+                    } else {
+                        $.messager.alert("友情提示", "导入失败，请您检查");
+
+                    }
+
+                }
+            });
+        }
+
+        //当单击修改的时候弹出修改的层
+        function ShowUpdateGcjcgxDialog() {
+            //首先获取选择的数量的多少
+            var CheckID = $("#test").datagrid('getSelections');
+            if (CheckID.length == 1) {
+                $("#UpdateGcjcgxDialog").dialog('open').dialog('setTitle', '修改信息')
+                //当弹出层的时候绑定用户权限的信息
+                BindGcjcgx();
+            }
+            else {
+                $.messager.alert("友情提示", "每次只能修改一行数据，你已经选择了<font color='red' size='6'>" + CheckID.length + "</font>行");
+            }
+        }
+
+        //当用户单击修改的时候，显示用户权限的信息
+        function BindGcjcgx() {
+            //首先获取用户选择的ID信息
+            var BindID = $("#test").datagrid('getSelections')[0].id;
+            //使用异步发送时间的请求,ActionName1，RequestUrl1，RequestHttpType1
+
+            $.getJSON("/DataDetection/BindGcjcdqyl", { id: BindID }, function (date) {
+                $("#dbid").val(date.id);
+                //首先加载数据显示在表单列表中
+                initGcjcgxmxTable();
+                $("#xg_gdmc").val(date.gdmc);
+                $('#xg_gdmc').validatebox('validate');// 赋值完后再进行验证
+                $("#xg_gcr").val(date.gcr);
+                $('#xg_gcr').validatebox('validate');// 赋值完后再进行验证
+                $("#xg_jsr").val(date.jsr);
+                $('#xg_jsr').validatebox('validate');// 赋值完后再进行验证
+                $("#xg_jhr").val(date.jhr);
+                $('#xg_jhr').validatebox('validate');// 赋值完后再进行验证
+                $("#hd_jcsj").val(datetoLocal(date.jcsj));
+                $("#xg_jcsj").datebox('setValue', datetoLocal(date.jcsj));
+                $('#xg_jcsj').validatebox('validate');// 赋值完后再进行验证
+            });
+
+
+        }
+
+        //实现修改权限的信息
+        function UpdateGcjcgx() {
+            $("#btnUpdateGcjcgx").click(function () {
+                //首先验证表单是否通过验证信息
+                var validate = $("#GcjcgxUpdate").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //获取传递的参数,ActionName1，RequestUrl1，RequestHttpType1
+                var postData = {
+                    id: $("#dbid").val(),
+                    gdmc: $("#xg_gdmc").val(),
+                    gcr: $("#xg_gcr").val(),
+                    jsr: $("#xg_jsr").val(),
+                    jhr: $("#xg_jhr").val(),
+                    jcsj: $("#xg_jcsj").val()
+                };
+
+                //发送异步请求进行修改信息
+                $.post("/DataDetection/UpdateGcjcdqyl", postData, function (data) {
+                    if (data == "OK") {
+
+                        $("#xg_gdmc").val("");
+                        $("#xg_gcr").val("");
+                        $("#xg_jsr").val("");
+                        $("#xg_jhr").val("");
+                        $("#xg_jcsj").datebox('setValue', "");
+                        //关闭层，刷新表格
+                        $("#UpdateGcjcgxDialog").dialog('close');
+                        $("#test").datagrid('reload');
+
+                    }
+                    else {
+                        $.messager.alert("友情提示", "修改失败，请您检查");
+                    }
+                });
+            });
+        }
+
+
+        //首先加载数据显示在表单列表中
+        function initGcjcgxmxTable(queryParame) {
+            $('#testmx').datagrid({
+                title: '地墙应力监测值表',
+                iconCls: 'icon-save',
+                height: 480,
+                nowrap: true,
+                autoRowHeight: false,
+                striped: true,
+                collapsible: true,
+                url: '/DataDetection/GetQtGcjcdqylmxShow?gcid=' + $("#dbid").val(),
+                sortName: 'id',
+                sortOrder: 'asc',
+                //striped:true,
+                border: true,
+                remoteSort: false,
+                idField: 'id',
+                pagination: false,
+                rownumbers: true,
+                queryParams: queryParame,
+                columns: [[
+                    { field: 'ck', checkbox: true },
+                    { field: 'id', title: 'id', width: 50, sortable: true, hidden: 'true' },
+                    { field: 'jcd', title: "监测点", width: 100, sortable: true, },
+                    { field: 'sd', title: '深度（米）', width: 100, sortable: true },
+                    { field: 'ms', title: '名称', width: 100, sortable: true },
+                    {
+                        field: 'jsz', title: '计算值', width: 100, sortable: true,
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                if (isNotANumber(value)) {
+                                    var jjz_lj = row["jjz"].toString();
+                                    if (jjz_lj != "") {
+                                        if (jjz_lj.indexOf("±") >= 0) {
+                                            jjz_lj = jjz_lj.replace("±", "");
+                                            if (isNotANumber(jjz_lj)) {
+                                                if (parseFloat(value) >= 0 && parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl >= 60 && bhl < 80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl >= 80 && bhl < 100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl >= 100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+
+                                                } else if (parseFloat(value) < 0 && parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl <= -60 && bhl >= -80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl <= -80 && bhl > -100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl <= -100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            if (isNotANumber(jjz_lj)) {
+                                                if (parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl >= 60 && bhl < 80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl >= 80 && bhl < 100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl >= 100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                }
+                            }
+                            return value;
+
+
+                        } },
+                    {
+                        field: 'bhz', title: '变化值', width: 100, sortable: true,
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                if (isNotANumber(value)) {
+                                    //if ((parseFloat(value) >= 60 && parseFloat(value) < 80) || (parseFloat(value) <= -60 && parseFloat(value) >= -80)) {
+                                    //    return "<span style='color:yellow'>" + value + "</span>";
+                                    //} else if ((parseFloat(value) >= 80 && parseFloat(value) < 100) || (parseFloat(value) <= -80 && parseFloat(value) > -100)) {
+                                    //    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                    //} else if (parseFloat(value) >= 100 || parseFloat(value) <= -100) {
+                                    //    return "<span style='color:red'>" + value + "</span>";
+                                    //}
+                                    var jjz_lj = row["jjz"].toString();
+                                    if (jjz_lj != "") {
+                                        if (jjz_lj.indexOf("±") >= 0) {
+                                            jjz_lj = jjz_lj.replace("±", "");
+                                            if (isNotANumber(jjz_lj)) {
+                                                if (parseFloat(value) >= 0 && parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl >= 60 && bhl < 80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl >= 80 && bhl < 100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl >= 100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+
+                                                } else if (parseFloat(value) < 0 && parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl <= -60 && bhl >= -80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl <= -80 && bhl > -100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl <= -100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            if (isNotANumber(jjz_lj)) {
+                                                if (parseFloat(jjz_lj) != 0) {
+                                                    var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                    if (bhl >= 60 && bhl < 80) {
+                                                        return "<span style='color:yellow'>" + value + "</span>";
+                                                    } else if (bhl >= 80 && bhl < 100) {
+                                                        return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                    } else if (bhl >= 100) {
+                                                        return "<span style='color:red'>" + value + "</span>";
+                                                    }
+
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                    return value;
+                                }
+                            }
+                            return value;
+                        }  },
+                    {
+                        field: 'cs', title: '次数', width: 80, sortable: true,
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                return "第" + value + "次";
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        field: 'jcsj', title: "监测时间", width: 100, sortable: true,
+                        formatter: function (value, row, index) {
+                            return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-MM-dd");
+                        }
+                    },
+                    { field: 'bz', title: '备注', width: 100, sortable: true },
+                    { field: 'jjz', title: '警戒值', width: 100, sortable: true }
+
+                ]],
+                onLoadSuccess: function (data) {                      //data是默认的表格加载数据，包括rows和Total
+                    var mark = 1;                                                 //这里涉及到简单的运算，mark是计算每次需要合并的格子数
+                    for (var i = 1; i < data.rows.length; i++) {     //这里循环表格当前的数据
+                        if (data.rows[i]['jcd'] == data.rows[i - 1]['jcd']) {   //后一行的值与前一行的值做比较，相同就需要合并
+                            mark += 1;
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'jcd',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'bz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'jjz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'jcsj',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'cs',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+                        } else {
+                            mark = 1;                        //一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
+                        }
+                    }
+                    //-----------------------------------
+
+                },
+                toolbar: [{
+                    id: 'btnadd',
+                    text: '添加数据',
+                    iconCls: 'icon-add',
+                    handler: function () {
+                        //实现弹出添加信息的层
+                        ShowCreateGcjcgxmxDialog();
+                    }
+                }, '-', {
+                    id: 'btncut',
+                    text: '修改数据',
+                    iconCls: 'icon-cut',
+                    handler: function () {
+
+                        //实现弹出修改信息的层
+                        ShowUpdateGcjcgxmxDialog();
+                    }
+                }, '-', {
+                    id: 'btnsave',
+                    text: '删除数据',
+                    iconCls: 'icon-remove',
+                    handler: function () {
+                        //确认只删除一条信息
+                        DeleteGcjcgxmxByClick();
+                    }
+                }]
+            });
+        }
+
+        //弹出添加层
+        function ShowCreateGcjcgxDialog() {
+            $("#AddGcjcgxDialog").dialog('open').dialog('setTitle', "添加信息");
+            //当再次添加的时候清空文本框里面的值
+            ClearTextBoxSecond();
+        }
+        //实现添加权限信息
+        function AddGcjcgx() {
+            $("#btnAddGcjcgx").click(function () {
+                //首先验证表单是否通过
+                var validate = $("#GcjcgxAdd").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //构造需要传递的参数给后台,RequestUrl,RequestHttpType,ActionName
+                var postData = {
+                    gdmc: $("#add_gdmc").val(),
+                    gcr: $("#add_gcr").val(),
+                    jsr: $("#add_jsr").val(),
+                    jhr: $("#add_jhr").val(),
+                    jcsj: $("#add_jcsj").val()
+                };
+                //异步实现添加信息
+                $.post("/DataDetection/AddGcjcdqyl", postData, function (data) {
+                    if (data == "OK") {
+                        //关闭层，刷新表单
+                        $("#AddGcjcgxDialog").dialog('close');
+                        $("#test").datagrid('reload');
+                    }
+                    else {
+                        $.messager.alert("友情提示", "添加失败，请您检查");
+                    }
+                });
+            });
+        }
+
+        //当再次添加的时候清空文本框里面的值,RequestUrl,RequestHttpType,ActionName
+        function ClearTextBoxSecond() {
+
+            $("#add_gdmc").val("");
+            $("#add_gcr").val("");
+            $("#add_jsr").val("");
+            $("#add_jhr").val("");
+            $("#add_jcsj").datebox('setValue', "");
+        }
+
+        //设置用户搜索权限的方法
+        function SearchGcjcgx() {
+            //按照条件进行搜索
+            $("#btnSerach").click(function () {
+
+                var queryParame = {
+                    jcsj: $("#txtjcsj").val()
+                };
+                //重新调用刷新表单信息
+                initGcjcgxTable(queryParame);
+                return false;
+            });
+        }
+
+        //-------------------------------------------------------------
+        //实现删除的信息
+        function DeleteGcjcgxmxByClick() {
+            //首先判断用户必须选择数据才能删除
+            var CheckID = $("#testmx").datagrid('getSelections');
+            if (CheckID.length >= 1) {
+                //构造选择的删除的所有的ID
+                var ids = "";
+                for (var i = 0; i < CheckID.length; i++) {
+                    ids += CheckID[i].id + ",";
+                }
+                ids = ids.substring(0, ids.length - 1);
+
+                //确认删除信息
+                $.messager.confirm("友情提示", "您确认要删除此数据吗？", function (deleteData) {
+                    if (deleteData) {
+                        //发送异步请求
+                        $.post("/DataDetection/DeleteQtGcjcdqylmx", { id: ids }, function (data) {
+                            if (data == "OK") {
+                                //实现提示删除成功，刷新表格
+                                $.messager.alert("友情提示", "删除成功");
+                                $("#testmx").datagrid('reload');
+                                //删除之后，清空上一次选择的信息
+                                $("#testmx").datagrid('clearSelections');
+                            }
+                            else {
+                                $.messager.alert("友情提示", "删除失败" + data);
+                            }
+                        })
+                    }
+                })
+            }
+            else {
+                $.messager.alert("友情提示", "请选择您要删除的数据");
+            }
+        }
+
+        //当单击修改的时候弹出修改的层
+        function ShowUpdateGcjcgxmxDialog() {
+            //首先获取选择的数量的多少
+            var CheckID = $("#testmx").datagrid('getSelections');
+            if (CheckID.length == 1) {
+                $("#UpdateGcjcgxmxDialog").dialog('open').dialog('setTitle', '修改信息')
+                //当弹出层的时候绑定用户权限的信息
+                BindGcjcgxmx();
+            }
+            else {
+                $.messager.alert("友情提示", "每次只能修改一行数据，你已经选择了<font color='red' size='6'>" + CheckID.length + "</font>行");
+            }
+        }
+
+        //当用户单击修改的时候，显示用户权限的信息
+        function BindGcjcgxmx() {
+            //首先获取用户选择的ID信息
+            var BindID = $("#testmx").datagrid('getSelections')[0].id;
+            //使用异步发送时间的请求,ActionName1，RequestUrl1，RequestHttpType1
+
+            $.getJSON("/DataDetection/BindGcjcdqylmx", { id: BindID }, function (date) {
+                $("#gcmxid").val(date.id);
+                $("#xgmx_gcid").val(date.gcid);
+                $("#xgmx_jcd").val(date.jcd);
+                $('#xgmx_jcd').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_sd").val(date.sd);
+                $('#xgmx_sd').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_ms").val(date.ms);
+                $('#xgmx_ms').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_jsz").val(date.jsz);
+                $('#xgmx_jsz').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_bhz").val(date.bhz);
+                $('#xgmx_bhz').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_jjz").val(date.jjz);
+                $('#xgmx_jjz').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_cs").val(date.cs);
+                $('#xgmx_cs').validatebox('validate');// 赋值完后再进行验证
+                $("#xgmx_bz").val(date.bz);
+                $('#xgmx_bz').validatebox('validate');// 赋值完后再进行验证
+
+                $("#xgmx_jcsj").datebox('setValue', datetoLocal(date.jcsj));
+                $('#xgmx_jcsj').validatebox('validate');// 赋值完后再进行验证
+            });
+
+
+        }
+
+        //实现修改权限的信息
+        function UpdateGcjcgxmx() {
+            $("#btnUpdateGcjcgxmx").click(function () {
+                //首先验证表单是否通过验证信息
+                var validate = $("#GcjcgxmxUpdate").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //获取传递的参数,ActionName1，RequestUrl1，RequestHttpType1
+                var postData = {
+                    id: $("#gcmxid").val(),
+                    gcid: $("#xgmx_gcid").val(),
+                    jcd: $("#xgmx_jcd").val(),
+                    sd: $("#xgmx_sd").val(),
+                    ms: $("#xgmx_ms").val(),
+                    jsz: $("#xgmx_jsz").val(),
+                    bhz: $("#xgmx_bhz").val(),
+                    jjz: $("#xgmx_jjz").val(),
+                    cs: $("#xgmx_cs").val(),
+                    bz: $("#xgmx_bz").val(),
+                    jcsj: $("#xgmx_jcsj").val()
+                };
+
+                //发送异步请求进行修改信息
+                $.post("/DataDetection/UpdateGcjcdqylmx", postData, function (data) {
+                    if (data == "OK") {
+                       
+                        $("#xgmx_jcd").val("");
+                        $("#xgmx_sd").val("");
+                        $("#xgmx_ms").val("");
+                        $("#xgmx_jsz").val("");
+                        $("#xgmx_bhz").val("");
+                        $("#xgmx_jjz").val("");
+                        $("#xgmx_cs").val("");
+                        $("#xgmx_bz").val("");
+                        $("#xgmx_jcsj").datebox('setValue', "");
+                        //关闭层，刷新表格
+                        $("#UpdateGcjcgxmxDialog").dialog('close');
+                        $("#testmx").datagrid('reload');
+
+                    }
+                    else {
+                        $.messager.alert("友情提示", "修改失败，请您检查");
+                    }
+                });
+            });
+        }
+
+        //弹出添加层
+        function ShowCreateGcjcgxmxDialog() {
+            $("#AddGcjcgxmxDialog").dialog('open').dialog('setTitle', "添加信息");
+            //当再次添加的时候清空文本框里面的值
+            ClearTextBoxAddGcjcgxmx();
+            BindaddGcjcgxmx();
+        }
+        //当再次添加的时候清空文本框里面的值,RequestUrl,RequestHttpType,ActionName
+        function ClearTextBoxAddGcjcgxmx() {
+
+            $("#addmx_jcd").val("");
+            $("#addmx_sd").val("");
+            $("#addmx_ms").val("");
+            $("#addmx_jsz").val("");
+            $("#addmx_bhz").val("");
+            $("#addmx_jjz").val("");
+            $("#addmx_cs").val("");
+            $("#addmx_bz").val("");
+            $("#addmx_jcsj").datebox('setValue', "");
+        }
+        //当用户单击修改的时候，显示用户权限的信息
+        function BindaddGcjcgxmx() {
+            //首先获取用户选择的ID信息
+            var BindID = $("#test").datagrid('getSelections')[0].id;
+            //使用异步发送时间的请求,ActionName1，RequestUrl1，RequestHttpType1
+
+            $.getJSON("/DataDetection/BindGcjcdqyl", { id: BindID }, function (date) {
+                $("#addmx_gcid").val(date.id);
+                $("#addmx_jcsj").datebox('setValue', date.jcsj);
+            });
+
+
+        }
+        //实现添加权限信息
+        function AddGcjcgxmx() {
+            $("#btnAddGcjcgxmx").click(function () {
+                //首先验证表单是否通过
+                var validate = $("#GcjcgxmxAdd").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //构造需要传递的参数给后台,RequestUrl,RequestHttpType,ActionName
+                var postData = {
+                    gcid: $("#addmx_gcid").val(),
+                    jcd: $("#addmx_jcd").val(),
+                    sd: $("#addmx_sd").val(),
+                    ms: $("#addmx_ms").val(),
+                    jsz: $("#addmx_jsz").val(),
+                    bhz: $("#addmx_bhz").val(),
+                    jjz: $("#addmx_jjz").val(),
+                    cs: $("#addmx_cs").val(),
+                    bz: $("#addmx_bz").val(),
+                    jcsj: $("#addmx_jcsj").val()
+                };
+                //异步实现添加信息
+                $.post("/DataDetection/AddGcjcdqylmx", postData, function (data) {
+                    if (data == "OK") {
+                        //关闭层，刷新表单
+                        $("#AddGcjcgxmxDialog").dialog('close');
+                        $("#testmx").datagrid('reload');
+                    }
+                    else {
+                        $.messager.alert("友情提示", "添加失败，请您检查");
+                    }
+                });
+            });
+        }
+    </script>
+</head>
+<body>
+    <!--  @*-------------------------- 搜索-------------------------*@  -->
+    <fieldset>
+        <legend>信息模糊搜索</legend>
+        <div>
+            <label for="txtActionName">监测时间：</label>
+            <input type="text" ID="txtjcsj" name="txtjcsj" class="easyui-datebox" />&nbsp;&nbsp;
+            <a href="#" class="easyui-linkbutton" iconcls="icon-search" id="btnSerach" name="btnSerach">模糊搜索</a>
+        </div>
+    </fieldset>
+
+    <!--  @*-------------------------- 实现对权限数据的显示-------------------------*@  -->
+    <div>
+        <table id="test"></table>
+    </div>
+    <!--  @*----------------------------设置导入的弹出层--------------------------------*@  -->
+    <div id="DrGcjcgxDialog" class="easyui-dialog" style="width:600px;height:350px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <form enctype="multipart/form-data" id="file-form">
+            <table id="tblDr">
+
+                <tr>
+                    <td style="width:25%"><label for="gdmc">工程名称：</label></td>
+                    <td colspan="3"><input class="easyui-validatebox" style="width:90%" type="text" id="gdmc" name="gdmc" data-options="required:true,validType:'length[1,256]'" value="" /></td>
+                    <td>
+                </tr>
+                <tr>
+                    <td><label for="gcr">观测者：</label></td>
+                    <td><input class="easyui-validatebox" type="text" id="gcr" name="gcr" data-options="required:true,validType:'length[1,16]'" value="" /></td>
+                    <td>
+
+                    <td><label for="jsr" style="width:25%">计算者：</label></td>
+                    <td><input class="easyui-validatebox" type="text" id="jsr" name="jsr" data-options="required:true,validType:'length[1,16]'" value="" /></td>
+                    <td>
+                </tr>
+                <tr>
+                    <td><label for="jhr">校核者：</label></td>
+                    <td><input class="easyui-validatebox" type="text" id="jhr" name="jhr" data-options="required:true,validType:'length[1,16]'" value="" /></td>
+                    <td>
+
+                    <td><label for="jcsj">监测时间：</label></td>
+                    <td><input class="easyui-datebox" type="text" id="jcsj" name="jcsj" data-options="required:true,validType:'length[1,16]'" /></td>
+                    <td>
+                </tr>
+                <tr>
+                    <td><label for="ActionName">选择文件：</label></td>
+                    <td colspan="3">
+
+                        <input id="fileData" name="fileData" type="file" class="easyui-validatebox" />
+
+                    </td>
+                    <td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="text-align:center; padding-top:10px">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" id="btnDrGcjcgx" iconcls="icon-ok" onclick="importExcel()">确定</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#DrGcjcgxDialog').dialog('close')">关闭</a>
+                        <span style="float:right">
+                            <a class="toolQiTa1" href="~/UploadFile/地墙应力监测导入.xlsx" target="_blank">导入模板下载</a>
+                        </span>
+
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <!--  @*----------------------------设置添加的弹出层--------------------------------*@  -->
+    <div id="AddGcjcgxDialog" class="easyui-dialog" style="width:760px;height:350px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcgxAdd" method="post" novalidate="novalidate">
+                <table id="tblAdd">
+                    <tr>
+                        <td style="width:25%"><label for="gdmc">工程名称：</label></td>
+                        <td colspan="3"><input class="easyui-validatebox" style="width:90%" type="text" id="add_gdmc" name="add_gdmc" data-options="required:true,validType:'length[1,256]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="gcr">观测者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="add_gcr" name="add_gcr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="jsr" style="width:25%">计算者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="add_jsr" name="add_jsr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jhr">校核者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="add_jhr" name="add_jhr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="jcsj">监测时间：</label></td>
+                        <td><input class="easyui-datebox" type="text" id="add_jcsj" name="add_jcsj" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnAddGcjcgx" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#AddGcjcgxDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+
+            </form>
+        </fieldset>
+    </div>
+
+    <!--  @*----------------------------设置修改的弹出层--------------------------------*@  -->
+    <div id="UpdateGcjcgxDialog" class="easyui-dialog" style="width:1000px;height:400px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcgxUpdate" method="post" novalidate="novalidate">
+                <table id="tblUpdate">
+                    <tr>
+                        <td style="width:25%"><label for="gdmc">工程名称：</label></td>
+                        <td colspan="3"><input class="easyui-validatebox" style="width:90%" type="text" id="xg_gdmc" name="xg_gdmc" data-options="required:true,validType:'length[1,256]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="gcr">观测者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xg_gcr" name="xg_gcr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="jsr" style="width:25%">计算者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xg_jsr" name="xg_jsr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jhr">校核者：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xg_jhr" name="xg_jhr" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="jcsj">监测时间：</label></td>
+                        <td><input class="easyui-datebox" type="text" id="xg_jcsj" name="xg_jcsj" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <input type="hidden" id="dbid" name="dbid" />
+                            <input type="hidden" id="hd_jcsj" name="hd_jcsj" />
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnUpdateGcjcgx" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#UpdateGcjcgxDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </fieldset>
+        <div>
+            <table id="testmx"></table>
+        </div>
+    </div>
+
+    <!--  @*----------------------------设置添加的弹出层--------------------------------*@  -->
+    <div id="AddGcjcgxmxDialog" class="easyui-dialog" style="width:760px;height:350px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcgxmxAdd" method="post" novalidate="novalidate">
+                <table id="tblAddmx">
+                    <tr>
+                        <td style="width:25%"><label for="gdmc">监测点：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_jcd" name="addmx_jcd" data-options="required:true,validType:'length[1,256]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">名称：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_ms" name="addmx_ms" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">深度（米）：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_sd" name="addmx_sd" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">计算值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_jsz" name="addmx_jsz" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">变化值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_bhz" name="addmx_bhz" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">警戒值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="addmx_jjz" name="addmx_jjz" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">次数：</label></td>
+                        <td><input class="easyui-validatebox" type="number" id="addmx_cs" name="addmx_cs" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                        <td><label for="jcsj">监测时间：</label></td>
+                        <td><input class="easyui-datebox" type="text" id="addmx_jcsj" name="addmx_jcsj" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jhr">备注：</label></td>
+                        <td colspan="3"><input class="easyui-validatebox" style="width:99%" type="text" id="addmx_bz" name="addmx_bz" /></td>
+                        <td>
+
+
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <input type="hidden" id="addmx_gcid" name="addmx_gcid" />
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnAddGcjcgxmx" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#AddGcjcgxmxDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+
+            </form>
+        </fieldset>
+    </div>
+
+    <!-- @*----------------------------设置修改的弹出层--------------------------------*@ -->
+    <div id="UpdateGcjcgxmxDialog" class="easyui-dialog" style="width:760px;height:400px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcgxmxUpdate" method="post" novalidate="novalidate">
+                <table id="tblUpdatemx">
+                    <tr>
+                        <td style="width:25%"><label for="gdmc">监测点：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_jcd" name="xgmx_jcd" data-options="required:true,validType:'length[1,256]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">名称：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_ms" name="xgmx_ms" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">深度（米）：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_sd" name="xgmx_sd" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">计算值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_jsz" name="xgmx_jsz" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">变化值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_bhz" name="xgmx_bhz" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+
+                        <td><label for="gcr">警戒值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="xgmx_jjz" name="xgmx_jjz"  /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jsr" style="width:25%">次数：</label></td>
+                        <td><input class="easyui-validatebox" type="number" id="xgmx_cs" name="xgmx_cs" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                        <td><label for="jcsj">监测时间：</label></td>
+                        <td><input class="easyui-datebox" type="text" id="xgmx_jcsj" name="xgmx_jcsj" data-options="required:true,validType:'length[1,16]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td><label for="jhr">备注：</label></td>
+                        <td colspan="3"><input class="easyui-validatebox" style="width:99%" type="text" id="xgmx_bz" name="xgmx_bz"  /></td>
+                        <td>
+
+
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <input type="hidden" id="gcmxid" name="gcmxid" />
+                            <input type="hidden" id="xgmx_gcid" name="xgmx_gcid" />
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnUpdateGcjcgxmx" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#UpdateGcjcgxmxDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </fieldset>
+        <div>
+            <table id="testmx"></table>
+        </div>
+    </div>
+
+</body>
+</html>

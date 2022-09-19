@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_workspace"
+        android:icon="@drawable/selector_bottom_nav_workspace_icon"
+        android:title="@string/menu_item_workspace"/>
+    <item
+        android:id="@+id/navigation_project"
+        android:icon="@drawable/selector_bottom_nav_project_icon"
+        android:title="@string/menu_item_project"/>
+    <item
+        android:id="@+id/navigation_team"
+        android:icon="@drawable/selector_bottom_nav_team_icon"
+        android:title="@string/menu_item_team"/>
+    <item
+        android:id="@+id/navigation_mine"
+        android:icon="@drawable/selector_bottom_nav_mine_icon"
+        android:title="@string/menu_item_mine"/>
+</menu>

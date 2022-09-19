@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>施工可视化模拟</title>
+    <link href="css/easyui.css" rel="stylesheet" />
+    <link href="css/icon.css" rel="stylesheet" />
+
+    <script src="js/jquery.easyui.min.js"></script>
+    <script src="js/easyui-lang-zh_CN.js"></script>
+
+    <!--引入three.js三维引擎-->
+    <script src="js/three.js"></script>
+    <!-- 引入threejs剖切js -->
+    <script src="js/3DLogic.js"></script>
+    <script src="js/Clipping.js"></script>
+    <!-- 引入threejs扩展控件-轨道控制器 -->
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/LegacyJSONLoader.js"></script>
+
+    <script>
+
+
+        $(function () {
+            $('.tab').css("height", "910px");
+            $('#layer_content').window('close');//隐藏构建信息表
+
+            $('.edit').on('click', function () {  //进度计划表的编辑保存
+                var $this = $(this),
+                    edit_status = $this.attr('edit_status'),
+                    status_value = edit_status && 1 == edit_status ? 0 : 1,
+                    $td_arr = $this.parent().prevAll('td');
+                $this.val(1 == status_value ? '完成' : '编辑').attr('edit_status', status_value);
+                $.each($td_arr, function () {
+                    var $td = $(this);
+                    if (1 == status_value) {
+                        $td.html('<input type="text" value="' + $td.html() + '">');
+                    } else if (0 == status_value) {
+                        $td.html($td.find('input[type=text]').val());
+                    }
+                });
+            });
+
+            //模拟事件
+            $('#simulate').click(function () {
+                $('#start').click();
+                $('#visible1').click();
+                setTimeout(function () {
+
+                    $('#visible2').click();
+                }, 3 * 1 * 1000);//延迟2000毫米
+                setTimeout(function () {
+
+                    $('#visible3').click();
+                }, 3 * 2 * 1000);//延迟4000毫米
+                setTimeout(function () {
+
+                    $('#visible4').click();
+                }, 3 * 3 * 1000);//延迟6000毫米
+                setTimeout(function () {
+
+                    $('#visible5').click();
+                }, 3 * 4 * 1000);//延迟8000毫米
+                setTimeout(function () {
+
+                    $('#visible6').click();
+                }, 3 * 5 * 1000);//延迟10000毫米
+                setTimeout(function () {
+
+                    $('#visible7').click();
+                }, 3 * 6 * 1000);//延迟12000毫米
+                setTimeout(function () {
+
+                    $('#visible8').click();
+                }, 3 * 7 * 1000);//延迟14000毫米
+
+            })
+        });
+
+    </script>
+</head>
+<body class="easyui-layout" onload="threeStart()">
+
+    <div data-options="region:'south',split:true,title:'施工进度计划'" style="height:330px;padding:10px;">
+
+        <table border="1" width=100%>
+            <tr>
+                <th>ID</th>
+                <th>任务名称</th>
+                <th>计划开始时间</th>
+                <th>计划结束时间</th>
+                <th>实际开始时间</th>
+                <th>实际结束时间</th>
+                <th>编辑</th>
+                <th>阶段</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>二层地库楼板施工</td>
+                <td>2020-4-22</td>
+                <td>2020-5-30</td>
+                <td>2020-4-22</td>
+                <td>2020-5-30</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible1"></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>二层地库结构柱施工</td>
+                <td>2020-5-30</td>
+                <td>2020-7-25</td>
+                <td>2020-5-30</td>
+                <td>2020-7-25</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible2"></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>二层地库墙的浇筑</td>
+                <td>2020-7-25</td>
+                <td>2020-8-31</td>
+                <td>2020-7-25</td>
+                <td>2020-8-31</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible3"></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>原地库墙的浇筑</td>
+                <td>2020-8-31</td>
+                <td>2020-10-13</td>
+                <td>2020-8-31</td>
+                <td>2020-10-13</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible4"></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>原地库楼板施工</td>
+                <td>2020-10-13</td>
+                <td>2020-11-23</td>
+                <td>2020-10-13</td>
+                <td>2020-11-23</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible5"></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>原地库结构柱施工</td>
+                <td>2020-11-23</td>
+                <td>2020-12-31</td>
+                <td>2020-11-23</td>
+                <td>2020-12-31</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible6"></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>原地库顶板施工</td>
+                <td>2020-12-31</td>
+                <td>2021-1-15</td>
+                <td>2020-12-31</td>
+                <td>2021-1-18</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible7"></td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>其他施工</td>
+                <td>2021-1-15</td>
+                <td>2021-2-28</td>
+                <td>2021-1-18</td>
+                <td>2021-3-10</td>
+                <td><input type="button" value="编辑" class="edit"></td>
+                <td><input type="button" name="button" value="显示" id="visible8"></td>
+            </tr>
+        </table>
+        <input type="button" name="button" value="进度模拟" id="simulate">
+        <a href="#" id="start" class="easyui-linkbutton" style="display:none;" onclick="start()">Start</a>
+
+        <div id="p" class="easyui-progressbar" style="float:left; width:400px;"></div>
+        <script>
+            function start() {
+                var value = $('#p').progressbar('getValue');
+                if (value < 100) {
+                    value += Math.floor(13);
+                    $('#p').progressbar('setValue', value);
+                    setTimeout(arguments.callee, 3000);
+                }
+            };
+        </script>
+        <a href="/Build/Index"><b>返回模型上传界面</b></a>
+    </div>
+    <div data-options="region:'center',title:'施工可视化仿真'" id="canvas3d">
+
+
+
+        <div id="layer_content" class="easyui-window" title="构件信息表" data-options="iconCls:'icon-save'" style="width: 400px; height: 600px; left: 1350px; top: 85px; padding: 10px;">
+        </div>
+
+        <script>
+            //定义全局变量
+            var renderer;
+            var camera;
+            var scene;
+            var mesh;
+            var objects = [];
+            var controls;
+            var viewcontrols;
+            var camControls;
+            var mouseVector = new THREE.Vector3();
+            var ambientLight;
+            var directionalLight;
+            var clock;
+            var obj;
+            var objMaterial;
+            var tableData;
+            var vPlease3D;
+
+            var ssMaterial;
+
+
+
+            //方法执行入口
+            function threeStart() {
+                var ssMaterial;
+
+
+                initThree();
+                initSence();
+                initCamera();
+                initLight();
+                initObject();
+                animation();
+                initSelectOneElement();
+                initViewcontrol();
+
+                group1.visible = false;
+                group2.visible = false;
+                group3.visible = false;
+                group4.visible = false;
+                group5.visible = false;
+                group6.visible = false;
+                group7.visible = false;
+                group8.visible = false;
+
+                //控制模型的显示和隐藏
+                $('#visible1').click(function () {
+                    if ($('#visible1').val() == '显示') {
+                        group1.visible = true;
+                        $('#visible1').val('隐藏');
+                    }
+                    else {
+                        group1.visible = false;
+                        $('#visible1').val('显示');
+                    }
+                })
+
+                $('#visible2').click(function () {
+                    if ($('#visible2').val() == '显示') {
+                        group2.visible = true;
+                        $('#visible2').val('隐藏');
+                    }
+                    else {
+                        group2.visible = false;
+                        $('#visible2').val('显示');
+                    }
+                })
+
+                $('#visible3').click(function () {
+                    if ($('#visible3').val() == '显示') {
+                        group3.visible = true;
+                        $('#visible3').val('隐藏');
+                    }
+                    else {
+                        group3.visible = false;
+                        $('#visible3').val('显示');
+                    }
+                })
+
+                $('#visible4').click(function () {
+                    if ($('#visible4').val() == '显示') {
+                        group4.visible = true;
+                        $('#visible4').val('隐藏');
+                    }
+                    else {
+                        group4.visible = false;
+                        $('#visible4').val('显示');
+                    }
+                })
+
+                $('#visible5').click(function () {
+                    if ($('#visible5').val() == '显示') {
+                        group5.visible = true;
+                        $('#visible5').val('隐藏');
+                    }
+                    else {
+                        group5.visible = false;
+                        $('#visible5').val('显示');
+                    }
+                })
+
+                $('#visible6').click(function () {
+                    if ($('#visible6').val() == '显示') {
+                        group6.visible = true;
+                        $('#visible6').val('隐藏');
+                    }
+                    else {
+                        group6.visible = false;
+                        $('#visible6').val('显示');
+                    }
+                })
+
+                $('#visible7').click(function () {
+                    if ($('#visible7').val() == '显示') {
+                        group7.visible = true;
+                        $('#visible7').val('隐藏');
+                    }
+                    else {
+                        group7.visible = false;
+                        $('#visible7').val('显示');
+                    }
+                })
+
+                $('#visible8').click(function () {
+                    if ($('#visible8').val() == '显示') {
+                        group8.visible = true;
+                        $('#visible8').val('隐藏');
+                    }
+                    else {
+                        group8.visible = false;
+                        $('#visible8').val('显示');
+                    }
+                })
+
+
+
+                //console.log(scene);
+            }
+
+            function initThree() {
+                var canvas3d = document.getElementById('canvas3d');  //获取div
+                width = window.screen.width;//获取画布「canvas3d」的宽
+                height = window.screen.height;//获取画布「canvas3d」的高
+                renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, logarithmicDepthBuffer: true });//生成渲染器对象
+                //renderer.setSize(width, height);//指定渲染器的高宽（和画布框大小一致）
+                renderer.setSize(1910, 570);//指定渲染器的高宽（和画布框大小一致）
+                canvas3d.appendChild(renderer.domElement);//追加canvas元素到div中
+                renderer.shadowMap.enabled = false;//是否允许渲染阴影
+                //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                //renderer.setClearColor(0xFFFFFF, 1.0);  //渲染背景颜色
+                renderer.setClearColor(0xb9d3ff, 1);
+                clock = new THREE.Clock();
+            }
+
+            function initSence() {
+                scene = new THREE.Scene();  //创建场景对象
+            }
+
+            // 初始化相机
+            function initCamera() {
+                camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000000);  //设置相机类型
+                //camera.position.set(0, 0, 100000);  //相机位置
+                camera.position.set(-277052, 204187, 119862);  //相机位置
+                camera.up = new THREE.Vector3(0, 1, 0);
+                camera.lookAt(0, 0, 0);  //设置相机方向
+            }
+
+            // 初始化灯光,设环境光和平行光，去掉阴影
+            function initLight() {
+                ambientLight = new THREE.AmbientLight(0xFFFFFF);  //设置环境光
+                ambientLight.position.set(0, 10000, 100000);  //设置环境光源位置
+                scene.add(ambientLight);  //将环境光添加进场景
+                directionalLight = new THREE.DirectionalLight(0xFFFFFF);  //设置平行光
+                directionalLight.intensity = 0.2; //设置光的强度
+                directionalLight.position.set(10000, 10000, 100000); //设置平行光位置
+                scene.add(directionalLight); //平行光源添加到场景中
+            }
+
+            var group1 = new THREE.Group();
+            group1.name = "一阶段";
+
+            var group2 = new THREE.Group();
+            group2.name = "二阶段";
+
+            var group3 = new THREE.Group();
+            group3.name = "三阶段";
+
+            var group4 = new THREE.Group();
+            group4.name = "四阶段";
+
+            var group5 = new THREE.Group();
+            group5.name = "五阶段";
+
+            var group6 = new THREE.Group();
+            group6.name = "六阶段";
+
+            var group7 = new THREE.Group();
+            group7.name = "七阶段";
+
+            var group8 = new THREE.Group();
+            group8.name = "八阶段";
+
+            // 加载物体
+            function initObject() {
+                var loader1 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader1.load('@Url.Content(ViewData["model1"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group1.add(mesh);
+                                    scene.add(group1);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+
+                var loader2 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader2.load('@Url.Content(ViewData["model2"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group2.add(mesh);
+                                    scene.add(group2);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+
+                var loader3 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader3.load('@Url.Content(ViewData["model3"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group3.add(mesh);
+                                    scene.add(group3);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+
+                var loader4 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader4.load('@Url.Content(ViewData["model4"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group4.add(mesh);
+                                    scene.add(group4);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+                 var loader5 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader5.load('@Url.Content(ViewData["model5"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group5.add(mesh);
+                                    scene.add(group5);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+                 var loader6 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader6.load('@Url.Content(ViewData["model6"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group6.add(mesh);
+                                    scene.add(group6);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+                 var loader7 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader7.load('@Url.Content(ViewData["model7"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group7.add(mesh);
+                                    scene.add(group7);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+                 var loader8 = new THREE.ObjectLoader();  //用于加载json格式的模型
+                loader8.load('@Url.Content(ViewData["model8"].ToString())', function (obj) {
+                    for (var i = 0; i < obj.children.length; i++) {   //遍历json子对象数组
+                        if (obj.children[i].hasOwnProperty("geometry")) {
+                            obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                            obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                            obj.children[i].geometry.computeFaceNormals();  //计算面的法向量值
+                            objects.push(obj.children[i]);
+                        }
+                        if (obj.children[i].children.length > 0) {
+                            for (var k = 0; k < obj.children[i].children.length; k++) {
+                                if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                                    obj.children[i].children[k].geometry.mergeVertices();   //检查重复顶点并移除
+                                    obj.children[i].children[k].geometry.computeFaceNormals();  //计算面的法向量值
+                                    ssMaterial = null;
+                                    ssMaterial = obj.children[i].children[k].material;  //赋予材质
+                                    ssMaterial.clipShadows = true;     //显示被剪切
+                                    ssMaterial.clipIntersection = false;
+                                    ssMaterial.wireframe = false;
+
+
+
+
+                                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                                    var mesh = new THREE.Mesh(obj.children[i].children[k].geometry, ssMaterial);
+                                    mesh.position.set(0, 0, 0);
+                                    mesh.name = obj.children[i].children[k].name;
+                                    //console.log(ssMaterial);
+                                    mesh.userData = obj.children[i].userData;  //存储自定义数据的对象
+                                    mesh.type = obj.children[i].children[k].type;
+                                    group8.add(mesh);
+                                    scene.add(group8);
+                                    //scene.add(mesh);
+                                    objects.push(mesh);
+
+                                }
+                            }
+                        }
+                    }
+                });
+
+            }
+
+
+
+
+
+
+            //模型渲染
+            function animation() {
+                if (camControls) {
+                    let delta = clock.getDelta();
+                    camControls.update(delta);
+                }
+
+                renderer.render(scene, camera);  //执行渲染操作
+                requestAnimationFrame(animation);  //请求再次执行渲染函数render，渲染下一帧
+
+            }
+
+
+
+            // 点选
+            function initSelectOneElement() {
+                renderer.domElement.addEventListener('click', onDocumentClick, false);
+
+            }
+
+            //点选构件
+            function onDocumentClick(event) {
+                event.preventDefault();
+                mouseVector.x = (event.layerX / window.screen.width) * 2 - 1;
+                mouseVector.y = -(event.layerY / window.screen.height) * 2 + 1;
+                var raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouseVector, camera);
+                var selMaterial = new THREE.MeshBasicMaterial({
+                    color: 'blue',
+                    side: '2',
+                    opacity: 0.5,
+                    transparent: true
+                });
+                var intersects = raycaster.intersectObjects(objects);
+                if (intersects.length > 0) {
+                    if (obj != null) {
+                        obj.object.material = objMaterial;
+                    }
+                    obj = intersects[0];
+                    //obj.object.visible = false; //隐藏构件
+
+                    objMaterial = intersects[0].object.material;
+                    intersects[0].object.material = selMaterial;
+
+                    //构建信息表的打开和数据获取
+                    $('#layer_content').window('open');
+                    $('#layer_content').html('');
+                    $('#layer_content').append(obj.object.name);
+                    tableData = document.createElement('table');//动态创建table表格
+                    tableData.border = '1';
+                    for (var item in obj.object.userData) {
+                        var currentRow = tableData.insertRow(-1);
+                        var tableTd = currentRow.insertCell(-1);
+                        tableTd.innerHTML = item;
+                        currentRow.insertCell(-1).innerHTML = obj.object.userData[item];
+                    }
+                    $('#layer_content').append(tableData);
+                }
+            }
+
+
+            // 视点放大缩小,移动视角
+            function initViewcontrol() {
+                viewcontrols = new THREE.OrbitControls(camera, renderer.domElement);  //创建控件对象
+                viewcontrols.enableRotate = true;
+                //vPlease3D.ctrlSection(viewcontrols, true);
+
+
+            }
+        </script>
+
+
+
+
+    </div>
+
+</body>
+</html>
+

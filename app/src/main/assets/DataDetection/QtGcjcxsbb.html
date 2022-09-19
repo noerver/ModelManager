@@ -1,0 +1,831 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <title>巡视监测报表</title>
+    <!--  @*引用easyUI的CSS*@  -->
+    <link href="../Content/jquery-easyui-1.8.8/themes/icon.css" rel="stylesheet" />
+    <link href="../Content/jquery-easyui-1.8.8/themes/default/easyui.css" rel="stylesheet" />
+    <link href="../Content/Site.css" rel="stylesheet" />
+
+    <!--@*引用easyUI的JS*@-->
+    <script src="../Scripts/jquery-1.8.2.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/jquery.easyui.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/locale/easyui-lang-zh_CN.js"></script>
+
+    <!--@*引用转换时间的JS文件*@-->
+    <script src="../Content/jquery-easyui-1.8.8/datapattern2.js"></script>
+    <script src="../Scripts/DataDetection.js"></script>
+    <script src="../Scripts/jquery.form.js"></script>
+
+    <script type="text/javascript">
+        function isNotANumber(inputData) {
+            //如果是一个空串或是一个空格，而isNaN是做为数字0进行处理的，而parseInt与parseFloat是返回一个错误消息，这个isNaN检查不严密而导致的。
+            if (parseFloat(inputData).toString() == "NaN") {
+                return false;
+            }
+            return true;
+        }
+        function datetoLocal(value) {
+            return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-MM-dd");
+        }
+        $(function () {
+            //首先加载数据显示在表单列表中
+            initGcjcbdTable();
+            //实现修改基本信息
+            UpdateGcjcbd();
+            //实现添加权限信息
+            AddGcjcbd();
+            //设置搜索信息
+            SearchGcjcbd();
+        });
+
+        //首先加载数据显示在表单列表中
+        function initGcjcbdTable(queryParame) {
+            $('#test').datagrid({
+                title: '巡视监测报表',
+                iconCls: 'icon-save',
+                height: 380,
+                nowrap: true,
+                autoRowHeight: false,
+                striped: true,
+                collapsible: true,
+                url: '/DataDetection/GetQtGcjcxsjcbbShow',
+                sortName: 'id',
+                sortOrder: 'asc',
+                //striped:true,
+                border: true,
+                remoteSort: false,
+                idField: 'id',
+                pagination: false,
+                rownumbers: true,
+                queryParams: queryParame,
+                columns: [[
+                    { field: 'id', title: 'id', width: 50, sortable: false,hidden: 'true' },
+                    {
+                        field: 'flmc', title: "分类", width: '20%', sortable: false, align: 'center', halign: 'center',
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                var jgid = row["jgid"].toString();
+                                return "<span onclick=\"ShowUpdateGcjcbdDialog(" + jgid+")\">"+value+"</span>";
+                            }
+                            return value;
+                        }  },
+                    {
+                        field: 'xsjcnr', title: '巡视检查内容', width: '30%', sortable: false, align: 'center', halign: 'center',
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                var jgid = row["jgid"].toString();
+                                return "<span onclick=\"ShowUpdateGcjcbdDialog(" + jgid + ")\">" + value + "</span>";
+                            }
+                            return value;
+                        }   },
+                    {
+                        field: 'xsjcjg', title: '巡视检查结果', width: '30%', sortable: false, align: 'center', halign: 'center',
+                        formatter: function (value, row, index) {
+                            if (value != "") {
+                                var jgid = row["jgid"].toString();
+                                return "<span onclick=\"ShowUpdateGcjcbdDialog(" + jgid + ")\">" + value + "</span>";
+                            }
+                            return value;
+                        }   },
+                    { field: 'bz', title: '备注', width: '20%', sortable: false, align: 'center', halign: 'center' }
+
+                ]],
+                onLoadSuccess: function (data) {                      //data是默认的表格加载数据，包括rows和Total
+                    var mark = 1;                                                 //这里涉及到简单的运算，mark是计算每次需要合并的格子数
+                    for (var i = 1; i < data.rows.length; i++) {     //这里循环表格当前的数据
+                        if (data.rows[i]['flmc'] == data.rows[i - 1]['flmc']) {   //后一行的值与前一行的值做比较，相同就需要合并
+                            mark += 1;
+                            $(this).datagrid('mergeCells', {
+                                index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'flmc',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+
+                        } else {
+                            mark = 1;                        //一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
+                        }
+                        if (data.rows[i]['xsjcnr'] == data.rows[i]['xsjcjg']) {   //相同就需要合并
+                            $(this).datagrid('mergeCells', {
+                                index: i,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                                field: 'xsjcnr',                 //合并单元格的区域，就是clomun中的filed对应的列
+                                colspan: 3                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                            });
+
+                        }
+                    }
+                },
+                toolbar: [{
+                    id: 'btnadd',
+                    text: '添加数据',
+                    iconCls: 'icon-add',
+                    handler: function () {
+                        //实现弹出添加信息的层
+                        ShowCreateGcjcbdDialog();
+                    }
+                }]
+            });
+        }
+
+        //弹出添加层
+        function ShowCreateGcjcbdDialog() {
+            $("#AddGcjcbdDialog").dialog('open').dialog('setTitle', "添加信息");
+            //当再次添加的时候清空文本框里面的值
+            ClearTextBoxSecond();
+        }
+
+
+        //当再次添加的时候清空文本框里面的值,RequestUrl,RequestHttpType,ActionName
+        function ClearTextBoxSecond() {
+            //$("#add_gdmc").val("");
+            $("#add_jcsj").datebox('setValue', "");
+            $("#add_xsjcjg").val("");
+            $("#add_bz").val("");
+            $("#add_xsjcjg1").val("");
+            $("#add_bz1").val("");
+            $("#add_xsjcjg2").val("");
+            $("#add_bz2").val("");
+            $("#add_xsjcjg3").val("");
+            $("#add_bz3").val("");
+            $("#add_xsjcjg4").val("");
+            $("#add_bz4").val("");
+            $("#add_xsjcjg5").val("");
+            $("#add_bz5").val("");
+            $("#add_xsjcjg6").val("");
+            $("#add_bz6").val("");
+            $("#add_xsjcjg7").val("");
+            $("#add_bz7").val("");
+            $("#add_xsjcjg8").val("");
+            $("#add_bz8").val("");
+            $("#add_xsjcjg9").val("");
+            $("#add_bz9").val("");
+            $("#add_xsjcjg10").val("");
+            $("#add_bz10").val("");
+            $("#add_xsjcjg11").val("");
+            $("#add_bz11").val("");
+            $("#add_xsjcjg12").val("");
+            $("#add_bz12").val("");
+            $("#add_xsjcjg13").val("");
+            $("#add_bz13").val("");
+            $("#add_xsjcjg14").val("");
+            $("#add_bz14").val("");
+            $("#add_xsjcjg15").val("");
+            $("#add_bz15").val("");
+            $("#add_xsjcjg16").val("");
+            $("#add_bz16").val("");
+            $("#add_xsjcjg17").val("");
+            $("#add_bz17").val("");
+            $("#add_bz18").val("");
+
+        }
+
+
+        //实现添加权限信息
+        function AddGcjcbd() {
+            $("#btnAddGcjcbd").click(function () {
+                //首先验证表单是否通过
+                var validate = $("#GcjcbdAdd").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //构造需要传递的参数给后台,RequestUrl,RequestHttpType,ActionName
+                var postData = {
+                    gdmc: $("#add_gdmc").val(),
+                    jcsj: $("#add_jcsj").val(),
+                    xsjcjg: $("#add_xsjcjg").val(),
+                    bz: $("#add_bz").val(),
+                    xsjcjg1: $("#add_xsjcjg1").val(),
+                    bz1: $("#add_bz1").val(),
+                    xsjcjg2: $("#add_xsjcjg2").val(),
+                    bz2: $("#add_bz2").val(),
+                    xsjcjg3: $("#add_xsjcjg3").val(),
+                    bz3: $("#add_bz3").val(),
+                    xsjcjg4: $("#add_xsjcjg4").val(),
+                    bz4: $("#add_bz4").val(),
+                    xsjcjg5: $("#add_xsjcjg5").val(),
+                    bz5: $("#add_bz5").val(),
+                    xsjcjg6: $("#add_xsjcjg6").val(),
+                    bz6: $("#add_bz6").val(),
+                    xsjcjg7: $("#add_xsjcjg7").val(),
+                    bz7: $("#add_bz7").val(),
+                    xsjcjg8: $("#add_xsjcjg8").val(),
+                    bz8: $("#add_bz8").val(),
+                    xsjcjg9: $("#add_xsjcjg9").val(),
+                    bz9: $("#add_bz9").val(),
+                    xsjcjg10: $("#add_xsjcjg10").val(),
+                    bz10: $("#add_bz10").val(),
+                    xsjcjg11: $("#add_xsjcjg11").val(),
+                    bz11: $("#add_bz11").val(),
+                    xsjcjg12: $("#add_xsjcjg12").val(),
+                    bz12: $("#add_bz12").val(),
+                    xsjcjg13: $("#add_xsjcjg13").val(),
+                    bz13: $("#add_bz13").val(),
+                    xsjcjg14: $("#add_xsjcjg14").val(),
+                    bz14: $("#add_bz14").val(),
+                    xsjcjg15: $("#add_xsjcjg15").val(),
+                    bz15: $("#add_bz15").val(),
+                    xsjcjg16: $("#add_xsjcjg16").val(),
+                    bz16: $("#add_bz16").val(),
+                    xsjcjg17: $("#add_xsjcjg17").val(),
+                    bz17: $("#add_bz17").val(),
+                    bz18: $("#add_bz18").val()
+                   
+                };
+                //异步实现添加信息
+                $.post("/DataDetection/AddGcjcxsjcjg", postData, function (data) {
+                    if (data == "OK") {
+                        //关闭层，刷新表单
+                        $("#AddGcjcbdDialog").dialog('close');
+                        $("#test").datagrid('reload');
+                    }
+                    else {
+                        $.messager.alert("友情提示", "添加失败，请您检查");
+                    }
+                });
+            });
+        }
+
+        //实现删除权限的信息
+        function DeleteGcjcbdByClick() {
+            //首先判断用户必须选择数据才能删除
+            var CheckID = $("#dbid").val();
+            if (CheckID!="") {
+              
+                //确认删除信息
+                $.messager.confirm("友情提示", "您确认要删除此数据吗？", function (deleteData) {
+                    if (deleteData) {
+                        //发送异步请求
+                        $.post("/DataDetection/DeleteQtGcjcxsjcjg", { id: CheckID }, function (data) {
+                            if (data == "OK") {
+                                //实现提示删除成功，刷新表格
+                                $.messager.alert("友情提示", "删除成功");
+                                $("#UpdateGcjcbdDialog").dialog('close');
+                                $("#test").datagrid('reload');
+                                //删除之后，清空上一次选择的信息
+                                $("#test").datagrid('clearSelections');
+                            }
+                            else {
+                                $.messager.alert("友情提示", "删除失败" + data);
+                            }
+                        })
+                    }
+                })
+            }
+            else {
+                $.messager.alert("友情提示", "请选择您要删除的数据");
+            }
+        }
+
+       
+        //当单击修改的时候弹出修改的层
+        function ShowUpdateGcjcbdDialog(id) {
+            //首先获取选择的数量的多少
+           
+            if (id!="") {
+                $("#UpdateGcjcbdDialog").dialog('open').dialog('setTitle', '修改信息')
+                //当弹出层的时候绑定用户权限的信息
+                BindGcjcbd(id);
+            }
+            else {
+                $.messager.alert("友情提示", "当前没有获取到可用的对象id");
+            }
+        }
+
+        //当用户单击修改的时候，显示用户权限的信息
+        function BindGcjcbd(BindID) {
+            $.getJSON("/DataDetection/BindGcjcxsjcjg", { id: BindID }, function (date) {
+                $("#dbid").val(date.id);
+                //首先加载数据显示在表单列表中
+                $("#xg_xsjcjg").val(date.xsjcjg);
+                $("#xg_bz").val(date.bz);
+                $("#xg_xsjcjg1").val(date.xsjcjg1);
+                $("#xg_bz1").val(date.bz);
+                $("#xg_xsjcjg2").val(date.xsjcjg2);
+                $("#xg_bz2").val(date.bz2);
+                $("#xg_xsjcjg3").val(date.xsjcjg3);
+                $("#xg_bz3").val(date.bz3);
+                $("#xg_xsjcjg4").val(date.xsjcjg4);
+                $("#xg_bz4").val(date.bz4);
+                $("#xg_xsjcjg5").val(date.xsjcjg5);
+                $("#xg_bz5").val(date.bz5);
+                $("#xg_xsjcjg6").val(date.xsjcjg6);
+                $("#xg_bz6").val(date.bz6);
+                $("#xg_xsjcjg7").val(date.xsjcjg7);
+                $("#xg_bz7").val(date.bz7);
+                $("#xg_xsjcjg8").val(date.xsjcjg8);
+                $("#xg_bz8").val(date.bz8);
+                $("#xg_xsjcjg9").val(date.xsjcjg9);
+                $("#xg_bz9").val(date.bz9);
+                $("#xg_xsjcjg10").val(date.xsjcjg10);
+                $("#xg_bz10").val(date.bz10);
+                $("#xg_xsjcjg11").val(date.xsjcjg11);
+                $("#xg_bz11").val(date.bz11);
+                $("#xg_xsjcjg12").val(date.xsjcjg12);
+                $("#xg_bz12").val(date.bz12);
+                $("#xg_xsjcjg13").val(date.xsjcjg13);
+                $("#xg_bz13").val(date.bz13);
+                $("#xg_xsjcjg14").val(date.xsjcjg14);
+                $("#xg_bz14").val(date.bz14);
+                $("#xg_xsjcjg15").val(date.xsjcjg15);
+                $("#xg_bz15").val(date.bz15);
+                $("#xg_xsjcjg16").val(date.xsjcjg16);
+                $("#xg_bz16").val(date.bz16);
+                $("#xg_xsjcjg17").val(date.xsjcjg17);
+                $("#xg_bz17").val(date._bz1);
+                $("#xg_bz18").val(date.bz18);
+
+                $("#xg_gdmc").val(date.gdmc);
+
+                $("#xg_xsjcjg").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg1").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz1").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg2").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz2").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg3").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz3").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg4").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz4").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg5").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz5").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg6").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz6").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg7").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz7").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg8").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz8").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg9").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz9").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg10").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz10").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg11").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz11").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg12").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz12").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg13").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz13").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg14").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz14").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg15").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz15").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg16").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz16").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_xsjcjg17").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz17").validatebox('validate');// 赋值完后再进行验证
+                $("#xg_bz18").validatebox('validate');// 赋值完后再进行验证
+
+                $("#xg_gdmc").validatebox('validate');// 赋值完后再进行验证
+
+                $("#xg_jcsj").datebox('setValue', datetoLocal(date.jcsj));
+                $('#xg_jcsj').validatebox('validate');// 赋值完后再进行验证
+               // $("#xg_jcsj").datebox('setValue', date.jcsj);
+
+            });
+
+
+        }
+
+        //实现修改权限的信息
+        function UpdateGcjcbd() {
+            $("#btnUpdateGcjcbd").click(function () {
+                //首先验证表单是否通过验证信息
+                var validate = $("#GcjcbdUpdate").form('validate');
+                if (validate == false) {
+                    return false;
+                }
+                //获取传递的参数,ActionName1，RequestUrl1，RequestHttpType1
+                var postData = {
+                    id: $("#dbid").val(),
+                    gdmc: $("#xg_gdmc").val(),
+                    jcsj: $("#xg_jcsj").val(),
+                    xsjcjg: $("#xg_xsjcjg").val(),
+                    bz: $("#xg_bz").val(),
+                    xsjcjg1: $("#xg_xsjcjg1").val(),
+                    bz1: $("#xg_bz1").val(),
+                    xsjcjg2: $("#xg_xsjcjg2").val(),
+                    bz2: $("#xg_bz2").val(),
+                    xsjcjg3: $("#xg_xsjcjg3").val(),
+                    bz3: $("#xg_bz3").val(),
+                    xsjcjg4: $("#xg_xsjcjg4").val(),
+                    bz4: $("#xg_bz4").val(),
+                    xsjcjg5: $("#xg_xsjcjg5").val(),
+                    bz5: $("#xg_bz5").val(),
+                    xsjcjg6: $("#xg_xsjcjg6").val(),
+                    bz6: $("#xg_bz6").val(),
+                    xsjcjg7: $("#xg_xsjcjg7").val(),
+                    bz7: $("#xg_bz7").val(),
+                    xsjcjg8: $("#xg_xsjcjg8").val(),
+                    bz8: $("#xg_bz8").val(),
+                    xsjcjg9: $("#xg_xsjcjg9").val(),
+                    bz9: $("#xg_bz9").val(),
+                    xsjcjg10: $("#xg_xsjcjg10").val(),
+                    bz10: $("#xg_bz10").val(),
+                    xsjcjg11: $("#xg_xsjcjg11").val(),
+                    bz11: $("#xg_bz11").val(),
+                    xsjcjg12: $("#xg_xsjcjg12").val(),
+                    bz12: $("#xg_bz12").val(),
+                    xsjcjg13: $("#xg_xsjcjg13").val(),
+                    bz13: $("#xg_bz13").val(),
+                    xsjcjg14: $("#xg_xsjcjg14").val(),
+                    bz14: $("#xg_bz14").val(),
+                    xsjcjg15: $("#xg_xsjcjg15").val(),
+                    bz15: $("#xg_bz15").val(),
+                    xsjcjg16: $("#xg_xsjcjg16").val(),
+                    bz16: $("#xg_bz16").val(),
+                    xsjcjg17: $("#xg_xsjcjg17").val(),
+                    bz17: $("#xg_bz17").val(),
+                    bz18: $("#xg_bz18").val()
+                };
+
+                //发送异步请求进行修改信息
+                $.post("/DataDetection/UpdateGcjcxsjcjg", postData, function (data) {
+                    if (data == "OK") {
+
+                        $("#xg_jcsj").datebox('setValue', "");
+                        $("#xg_xsjcjg").val("");
+                        $("#xg_bz").val("");
+                        $("#xg_xsjcjg1").val("");
+                        $("#xg_bz1").val("");
+                        $("#xg_xsjcjg2").val("");
+                        $("#xg_bz2").val("");
+                        $("#xg_xsjcjg3").val("");
+                        $("#xg_bz3").val("");
+                        $("#xg_xsjcjg4").val("");
+                        $("#xg_bz4").val("");
+                        $("#xg_xsjcjg5").val("");
+                        $("#xg_bz5").val("");
+                        $("#xg_xsjcjg6").val("");
+                        $("#xg_bz6").val("");
+                        $("#xg_xsjcjg7").val("");
+                        $("#xg_bz7").val("");
+                        $("#xg_xsjcjg8").val("");
+                        $("#xg_bz8").val("");
+                        $("#xg_xsjcjg9").val("");
+                        $("#xg_bz9").val("");
+                        $("#xg_xsjcjg10").val("");
+                        $("#xg_bz10").val("");
+                        $("#xg_xsjcjg11").val("");
+                        $("#xg_bz11").val("");
+                        $("#xg_xsjcjg12").val("");
+                        $("#xg_bz12").val("");
+                        $("#xg_xsjcjg13").val("");
+                        $("#xg_bz13").val("");
+                        $("#xg_xsjcjg14").val("");
+                        $("#xg_bz14").val("");
+                        $("#xg_xsjcjg15").val("");
+                        $("#xg_bz15").val("");
+                        $("#xg_xsjcjg16").val("");
+                        $("#xg_bz16").val("");
+                        $("#xg_xsjcjg17").val("");
+                        $("#xg_bz17").val("");
+                        $("#xg_bz18").val("");
+                        //关闭层，刷新表格
+                        $("#UpdateGcjcbdDialog").dialog('close');
+                        $("#test").datagrid('reload');
+
+                    }
+                    else {
+                        $.messager.alert("友情提示", "修改失败，请您检查");
+                    }
+                });
+            });
+        }
+
+        //设置用户搜索权限的方法
+        function SearchGcjcbd() {
+            //按照条件进行搜索
+            $("#btnSerach").click(function () {
+
+                var queryParame = {
+                    jcsj: $("#txtjcsj").val()
+                };
+                //重新调用刷新表单信息
+                initGcjcbdTable(queryParame);
+                return false;
+            });
+        }
+
+   
+    </script>
+    <style type="text/css">
+        .tab {
+            border-collapse: collapse;
+        }
+            .tab td {
+                text-align: center;
+                border: 1px solid #95B8E7;
+            }
+    </style>
+</head>
+<body>
+    <!--@*-------------------------- 搜索-------------------------*@-->
+    <fieldset>
+        <legend>信息模糊搜索</legend>
+        <div>
+            <label for="txtActionName">监测时间</label>
+            <input type="text" ID="txtjcsj" name="txtjcsj" class="easyui-datebox" />&nbsp;&nbsp;
+            <a href="#" class="easyui-linkbutton" iconcls="icon-search" id="btnSerach" name="btnSerach">模糊搜索</a>
+        </div>
+    </fieldset>
+
+    <!--@*-------------------------- 实现对权限数据的显示-------------------------*@-->
+    <div>
+        <table id="test"></table>
+    </div>
+   
+    <!--@*----------------------------设置添加的弹出层--------------------------------*@-->
+    <div id="AddGcjcbdDialog" class="easyui-dialog" style="width:960px;height:350px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcbdAdd" method="post" novalidate="novalidate">
+                <table id="tblAdd" style="width:99%" class="tab">
+                    <tr>
+                        <td style="text-align:center;width:20%" >工程名称</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" style="width:90%" type="text" id="add_gdmc" name="add_gdmc" data-options="required:true,validType:'length[1,256]'" value="" /></td>
+                        <td style="text-align:center;">巡视时间</td>
+                        <td style="text-align:center;"><input class="easyui-datebox" type="text" id="add_jcsj" name="add_jcsj" data-options="required:true" /></td>
+                        <td>
+                    </tr>
+
+                    <tr>
+                        <th style="text-align:center;width:20%">分类</th>
+                        <th style="text-align:center;width:30%">巡视检查内容</th>
+                        <th style="text-align:center;width:30%">巡视检查结果</th>
+                        <th style="text-align:center;width:20%">备注</th>
+                    </tr>
+
+
+                    <tr>
+                        <td style="text-align:center;" rowspan="6">支护结构</td>
+                        <td style="text-align: left;border-bottom: 1px solid #95B8E7;">支护结构成型质量</td>
+                        <td style="text-align: center; border-bottom: 1px solid #95B8E7;"><input class="easyui-validatebox" type="text" id="add_xsjcjg" name="add_xsjcjg"  /></td>
+                        <td style="text-align: center;border-bottom: 1px solid #95B8E7;"><input class="easyui-validatebox" type="text" id="add_bz" name="add_bz"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">冠梁、支撑、围檩裂缝</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg1" name="add_xsjcjg1"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz1" name="add_bz1"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">支撑、立柱变形</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg2" name="add_xsjcjg2"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz2" name="add_bz2"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">止水帷幕开裂、渗漏</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg3" name="add_xsjcjg3"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz3" name="add_bz3"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">墙后土体沉陷、裂缝及滑移</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg4" name="add_xsjcjg4"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz4" name="add_bz4"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑涌土、流砂、管涌</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg5" name="add_xsjcjg5"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz5" name="add_bz5"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="5">施工工况</td>
+                        <td style="text-align: left;">土质情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg6" name="add_xsjcjg6"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz6" name="add_bz6"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑开挖分段长度及分层厚度</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg7" name="add_xsjcjg7"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz7" name="add_bz7"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">地表水、地下水状况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg8" name="add_xsjcjg8"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz8" name="add_bz8"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">基坑降水、回灌设施运转情况</td>
+                        <td style="text-align:center;"> <input class="easyui-validatebox" type="text" id="add_xsjcjg9" name="add_xsjcjg9"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz9" name="add_bz9"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑周边地面堆载情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg10" name="add_xsjcjg10"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz10" name="add_bz10"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="4">周边环境</td>
+                        <td style="text-align: left;">地下管道破损、泄漏情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg11" name="add_xsjcjg11"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz11" name="add_bz11"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">周边建（构）筑物裂缝</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg12" name="add_xsjcjg12"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz12" name="add_bz12"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">周边道路（地面）裂缝、沉陷</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg13" name="add_xsjcjg13"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz13" name="add_bz13"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">邻近施工情况</td>
+                        <td style="text-align:center;"> <input class="easyui-validatebox" type="text" id="add_xsjcjg14" name="add_xsjcjg14"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz14" name="add_bz14"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="3">监测设施</td>
+                        <td style="text-align: left;">基准点、测点完好状况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg15" name="add_xsjcjg15"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz15" name="add_bz15"  /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">观测工作条件</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg16" name="add_xsjcjg16"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz16" name="add_bz16"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">监测元件完好情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_xsjcjg17" name="add_xsjcjg17"  /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="add_bz17" name="add_bz17"  /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">其它说明</td>
+                        <td style="text-align:center;" colspan="3"><input class="easyui-validatebox" type="text" id="add_bz18" name="add_bz18"  style="width:99%; height:40px" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnAddGcjcbd" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#AddGcjcbdDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+
+            </form>
+        </fieldset>
+    </div>
+
+    <!--@*----------------------------设置修改的弹出层--------------------------------*@-->
+    <div id="UpdateGcjcbdDialog" class="easyui-dialog" style="width:960px;height:400px;padding:10px 20px"
+         closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+        <fieldset>
+            <legend>基本信息</legend>
+            <form id="GcjcbdUpdate" method="post" novalidate="novalidate">
+                <table id="tblUpdate" style="width:99%" class="tab">
+                    <tr>
+                        <td style="text-align:center;width:20%">工程名称</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" style="width:90%" type="text" id="xg_gdmc" name="xg_gdmc" data-options="required:true,validType:'length[1,256]'" value="上海市瑞虹新城十号地块发展项目" /></td>
+                        <td style="text-align:center;">巡视时间</td>
+                        <td style="text-align:center;"><input class="easyui-datebox" type="text" id="xg_jcsj" name="xg_jcsj" data-options="required:true" /></td>
+                        <td>
+                    </tr>
+
+                    <tr>
+                        <th style="text-align:center;width:20%">分类</th>
+                        <th style="text-align:center;width:30%">巡视检查内容</th>
+                        <th style="text-align:center;width:30%">巡视检查结果</th>
+                        <th style="text-align:center;width:20%">备注</th>
+                    </tr>
+
+
+                    <tr>
+                        <td style="text-align:center;" rowspan="6">支护结构</td>
+                        <td style="text-align: left;border-bottom: 1px solid #95B8E7;">支护结构成型质量</td>
+                        <td style="text-align: center; border-bottom: 1px solid #95B8E7;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg" name="xg_xsjcjg" /></td>
+                        <td style="text-align: center;border-bottom: 1px solid #95B8E7;"><input class="easyui-validatebox" type="text" id="xg_bz" name="xg_bz" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">冠梁、支撑、围檩裂缝</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg1" name="xg_xsjcjg1" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz1" name="xg_bz1" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">支撑、立柱变形</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg2" name="xg_xsjcjg2" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz2" name="xg_bz2" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">止水帷幕开裂、渗漏</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg3" name="xg_xsjcjg3" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz3" name="xg_bz3" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">墙后土体沉陷、裂缝及滑移</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg4" name="xg_xsjcjg4" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz4" name="xg_bz4" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑涌土、流砂、管涌</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg5" name="xg_xsjcjg5" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz5" name="xg_bz5" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="5">施工工况</td>
+                        <td style="text-align: left;">土质情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg6" name="xg_xsjcjg6" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz6" name="xg_bz6" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑开挖分段长度及分层厚度</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg7" name="xg_xsjcjg7" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz7" name="xg_bz7" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">地表水、地下水状况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg8" name="xg_xsjcjg8" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz8" name="xg_bz8" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">基坑降水、回灌设施运转情况</td>
+                        <td style="text-align:center;"> <input class="easyui-validatebox" type="text" id="xg_xsjcjg9" name="xg_xsjcjg9" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz9" name="xg_bz9" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">基坑周边地面堆载情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg10" name="xg_xsjcjg10" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz10" name="xg_bz10" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="4">周边环境</td>
+                        <td style="text-align: left;">地下管道破损、泄漏情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg11" name="xg_xsjcjg11" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz11" name="xg_bz11" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">周边建（构）筑物裂缝</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg12" name="xg_xsjcjg12" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz12" name="xg_bz12" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">周边道路（地面）裂缝、沉陷</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg13" name="xg_xsjcjg13" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz13" name="xg_bz13" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">邻近施工情况</td>
+                        <td style="text-align:center;"> <input class="easyui-validatebox" type="text" id="xg_xsjcjg14" name="xg_xsjcjg14" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz14" name="xg_bz14" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;" rowspan="3">监测设施</td>
+                        <td style="text-align: left;">基准点、测点完好状况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg15" name="xg_xsjcjg15" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz15" name="xg_bz15" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;">观测工作条件</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg16" name="xg_xsjcjg16" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz16" name="xg_bz16" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">监测元件完好情况</td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_xsjcjg17" name="xg_xsjcjg17" /></td>
+                        <td style="text-align:center;"><input class="easyui-validatebox" type="text" id="xg_bz17" name="xg_bz17" /></td>
+
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">其它说明</td>
+                        <td style="text-align:center;" colspan="3"><input class="easyui-validatebox" type="text" id="xg_bz18" name="xg_bz18" style="width:99%; height:40px" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding-top:10px">
+                            <input type="hidden" id="dbid" name="dbid" />
+                            <input type="hidden" id="hd_jcsj" name="hd_jcsj" />
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnUpdateGcjcbd" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#UpdateGcjcbdDialog').dialog('close')">关闭</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:DeleteGcjcbdByClick()">删除</a>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </fieldset>
+        <div>
+            <table id="testmx"></table>
+        </div>
+    </div>
+
+   
+
+</body>
+</html>

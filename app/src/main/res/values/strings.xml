@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">模型管理器</string>
+    <string name="menu_item_workspace">工作台</string>
+    <string name="menu_item_project">项目</string>
+    <string name="menu_item_team">团队</string>
+    <string name="menu_item_mine">我的</string>
+    <string name="menu_item_scan">扫一扫</string>
+    <string name="menu_item_join">加入团队</string>
+    <string name="menu_item_create">创建新团队</string>
+    <string name="menu_item_invite">邀请新成员</string>
+    <string name="title_activity_base">BaseActivity</string>
+
+    <string name="title_activity_file_manager">FileManagerActivity</string>
+
+</resources>
