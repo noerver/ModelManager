@@ -12,14 +12,14 @@ var Model = Model || {};
 
 		initSection: function () {
 			var _this = this;
-			var vx = 470;
-			var vy = 30;
-			var vz = 180;
+			var vx = 6;
+			var vy = 6;
+			var vz = 6;
 			_this.clipSelection = null;
 			_this.clipPick = new Model.ClipPicking(_this);
 			_this.clipPick.setEventListener(false);
 
-			var vspc = 5;
+			var vspc = -5;
 			_this.clipPlanex1 = new THREE.Plane(new THREE.Vector3(-1, 0, 0), vx + vspc);
 			_this.clipPlanex2 = new THREE.Plane(new THREE.Vector3(1, 0, 0), vx + vspc);
 			_this.clipPlaney1 = new THREE.Plane(new THREE.Vector3(0, 1, 0), vy + vspc);
