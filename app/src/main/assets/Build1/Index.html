@@ -125,38 +125,40 @@
       <a href="javascript:$('#uploadify').uploadify('upload','*');">上传</a>
       <a href="javascript:$('#uploadify').uploadify('cancel', '*');">取消</a>
     </div> -->
-    <div style="position: fixed;">
+    <div style="width: 100%; text-align: center">
       <div
         class="easyui-panel"
         title="<center>模型上传</center>"
         style="
-          width: 450px;
-          height: 420px;
-          padding-left: 150px;
+          width: 100%;
+          min-height: 420px;
+          text-align: center;
           padding-top: 60px;
         "
         closable="false"
       >
-        <input type="file" name="file1" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file2" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file3" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file4" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file5" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file6" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file7" accept=".json" size="300" />
-        <br />
-        <input type="file" name="file8" accept=".json" size="300" />
-        <br />
-        <p>请上传.json模型文件</p>
-        <p></p>
-        <p></p>
-        <input type="submit" value="上传" />
+        <div style="text-align: left; padding-left: 60px; display:inline-block">
+          <input type="file" name="file1" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file2" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file3" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file4" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file5" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file6" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file7" accept=".json" size="300" />
+          <br />
+          <input type="file" name="file8" accept=".json" size="300" />
+          <br />
+          <p>请上传.json模型文件</p>
+          <p></p>
+          <p></p>
+          <input type="submit" value="上传" />
+        </div>
       </div>
     </div>
   </body>
