@@ -354,15 +354,15 @@
 
         function initThree() {
           var canvas3d = document.getElementById("canvas3d"); //获取div
-          width = window.screen.width; //获取画布「canvas3d」的宽
-          height = window.screen.height; //获取画布「canvas3d」的高
+          width =412; //获取画布「canvas3d」的宽
+          height =412; //获取画布「canvas3d」的高
           renderer = new THREE.WebGLRenderer({
             antialias: true,
             preserveDrawingBuffer: true,
             logarithmicDepthBuffer: true,
           }); //生成渲染器对象
           //renderer.setSize(width, height);//指定渲染器的高宽（和画布框大小一致）
-          renderer.setSize(1910, 570); //指定渲染器的高宽（和画布框大小一致）
+          renderer.setSize(412, 412); //指定渲染器的高宽（和画布框大小一致）
           canvas3d.appendChild(renderer.domElement); //追加canvas元素到div中
           renderer.shadowMap.enabled = false; //是否允许渲染阴影
           //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -379,7 +379,7 @@
         function initCamera() {
           camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000000); //设置相机类型
           //camera.position.set(0, 0, 100000);  //相机位置
-          camera.position.set(-277052, 204187, 119862); //相机位置
+          camera.position.set(-277052, 204187, 319862); //相机位置
           camera.up = new THREE.Vector3(0, 1, 0);
           camera.lookAt(0, 0, 0); //设置相机方向
         }
