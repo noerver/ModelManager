@@ -1,0 +1,95 @@
+{
+  "total": 5694,
+  "rows": [
+    {
+      "ID": 1,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 3,
+      "Depth": 0,
+      "VariationValue": 0,
+      "YesterdayPointtValue": 3
+    },
+    {
+      "ID": 2,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 5.59,
+      "Depth": 0.5,
+      "VariationValue": 0,
+      "YesterdayPointtValue": 5.59
+    },
+    {
+      "ID": 3,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 8.62,
+      "Depth": 1,
+      "VariationValue": 0.02,
+      "YesterdayPointtValue": 8.6
+    },
+    {
+      "ID": 4,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 11.71,
+      "Depth": 1.5,
+      "VariationValue": 0.07,
+      "YesterdayPointtValue": 11.64
+    },
+    {
+      "ID": 5,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 14.64,
+      "Depth": 2,
+      "VariationValue": 0.1,
+      "YesterdayPointtValue": 14.54
+    },
+    {
+      "ID": 6,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 17.65,
+      "Depth": 2.5,
+      "VariationValue": 0.12,
+      "YesterdayPointtValue": 17.53
+    },
+    {
+      "ID": 7,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 20.76,
+      "Depth": 3,
+      "VariationValue": 0.13,
+      "YesterdayPointtValue": 20.63
+    },
+    {
+      "ID": 8,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 23.76,
+      "Depth": 3.5,
+      "VariationValue": 0.15,
+      "YesterdayPointtValue": 23.61
+    },
+    {
+      "ID": 9,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 26.79,
+      "Depth": 4,
+      "VariationValue": 0.12,
+      "YesterdayPointtValue": 26.67
+    },
+    {
+      "ID": 10,
+      "MonitoringDate": "2018/02/25",
+      "MonitoringPoint": "CX1",
+      "PointtValue": 29.9,
+      "Depth": 4.5,
+      "VariationValue": 0.1,
+      "YesterdayPointtValue": 29.8
+    }
+  ]
+}

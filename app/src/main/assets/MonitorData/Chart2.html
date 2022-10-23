@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+
+    <link
+      href="../Content/jquery-easyui-1.8.8/themes/icon.css"
+      rel="stylesheet"
+    />
+    <link
+      href="../Content/jquery-easyui-1.8.8/themes/default/easyui.css"
+      rel="stylesheet"
+    />
+    <link href="../css/Site.css" rel="stylesheet" />
+
+    <script src="../Scripts/jquery-3.5.0.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/jquery.easyui.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/locale/easyui-lang-zh_CN.js"></script>
+
+    <script src="../Content/jquery-easyui-1.8.8/datapattern2.js"></script>
+
+    <script src="../Scripts/echarts/echarts.js"></script>
+    <title>Index</title>
+  </head>
+  <body>
+    <div id="main" style="width: 100%; height: 90vh; float: left"></div>
+    <script type="text/javascript">
+      const colors = ["#5793f3", "#d14a61", "#675bba"];
+      const option = {
+        title: {
+          text: "本次变化",
+          subtext: "报警值±3mm",
+          x: "center",
+        },
+
+        tooltip: {
+          trigger: "axis",
+        },
+        toolbox: {
+          feature: {
+            saveAsImage: {},
+          },
+        },
+        grid: {
+          left: "3%",
+          right: "25%",
+          bottom: 27,
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            name: "水平位移(mm)",
+            type: "value",
+            axisLine: { onZero: false },
+            position: "top",
+          },
+        ],
+        yAxis: [
+          {
+            name: "深度（m）",
+            type: "category",
+            axisLine: { onZero: false },
+            inverse: "true",
+            axisLabel: {
+              formatter: "{value} m",
+            },
+            boundaryGap: 0,
+            data: [
+              0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8,
+              8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15,
+              15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5,
+              22, 22.5, 23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5, 28,
+              28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32, 32.5, 33, 33.5, 34, 34.5,
+              35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40,
+            ],
+          },
+        ],
+        series: [
+          {
+            name: "监测数据",
+            type: "line",
+            //smooth: true,
+            lineStyle: {
+              width: 3,
+              shadowColor: colors[0],
+              shadowBlur: 10,
+              shadowOffsetY: 10,
+            },
+            markLine: {
+              lineStyle: {
+                width: 2,
+              },
+              silent: true,
+              data: [
+                {
+                  label: {
+                    show: true,
+                    formatter: "第一道钢砼支撑",
+                  },
+                  yAxis: 3,
+                },
+                {
+                  label: {
+                    show: true,
+                    formatter: "第二道钢砼支撑",
+                  },
+                  yAxis: 13,
+                },
+                {
+                  label: {
+                    show: true,
+                    formatter: "第三道钢砼支撑",
+                  },
+                  yAxis: 23,
+                },
+                {
+                  label: {
+                    show: true,
+                    formatter: "第四道钢砼支撑",
+                  },
+                  yAxis: 32,
+                },
+              ],
+            },
+            data: [],
+          },
+        ],
+      };
+
+      const charElement = document.getElementById("main");
+      function initChart(options, chartElement) {
+        const myChart = echarts.init(document.getElementById("main"));
+
+        loadData().then((json) => {
+          option.series[0].data = json.data[0].VariationValueList;
+          myChart.setOption(options);
+        });
+      }
+
+      function loadData() {
+        return new Promise((resolve, reject) => {
+          $.getJSON("./chart.json", function (json) {
+            resolve(json);
+          });
+        });
+      }
+
+      $(function () {
+        initChart(option, charElement);
+      });
+    </script>
+  </body>
+</html>

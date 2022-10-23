@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+
+    <link
+      href="../Content/jquery-easyui-1.8.8/themes/icon.css"
+      rel="stylesheet"
+    />
+    <link
+      href="../Content/jquery-easyui-1.8.8/themes/default/easyui.css"
+      rel="stylesheet"
+    />
+    <link href="../css/Site.css" rel="stylesheet" />
+
+    <script src="../Scripts/jquery-3.5.0.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/jquery.easyui.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/locale/easyui-lang-zh_CN.js"></script>
+
+    <script src="../Content/jquery-easyui-1.8.8/datapattern2.js"></script>
+
+    <script src="../Scripts/echarts/echarts.js"></script>
+    <title>Index</title>
+  </head>
+  <body>
+    <div id="main" style="width: 100%; height: 90vh; float: left"></div>
+    <script type="text/javascript">
+      const colors = ["#5793f3", "#d14a61", "#675bba"];
+      const option = {
+        title: {
+          text: "深层墙体水平位移（测斜）监测曲线",
+          subtext: "累计至当日变化量",
+          x: "center",
+        },
+        legend: {
+          orient: "vertical",
+          x: "left",
+          y: "top",
+          data: ["上一次累计变化曲线", "当日累计变化曲线"],
+        },
+        tooltip: {
+          trigger: "axis",
+        },
+        toolbox: {
+          feature: {
+            saveAsImage: {},
+          },
+        },
+        grid: {
+          left: "3%",
+          right: "25%",
+          bottom: 27,
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            name: "水平位移(mm)",
+            min: 0,
+            max: 200,
+            type: "value",
+            axisLine: { onZero: false },
+            position: "top",
+          },
+        ],
+        yAxis: [
+          {
+            name: "深度（m）",
+            type: "category",
+            axisLine: { onZero: false },
+            inverse: "true",
+            axisLabel: {
+              formatter: "{value} m",
+            },
+            boundaryGap: false,
+            data: [
+              0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8,
+              8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15,
+              15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5,
+              22, 22.5, 23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5, 28,
+              28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32, 32.5, 33, 33.5, 34, 34.5,
+              35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40,
+            ],
+          },
+        ],
+        series: null,
+      };
+
+      const charElement = document.getElementById("main");
+      function initChart(options, chartElement) {
+        const myChart = echarts.init(document.getElementById("main"));
+
+        loadData().then((seriesArray) => {
+          option.series = seriesArray;
+          myChart.setOption(options);
+        });
+      }
+
+      function loadData() {
+        return new Promise((resolve, reject) => {
+          $.getJSON("./chart.json", function (json) {
+            const length = json.data.length;
+            let seriesArray = new Array(length);
+            seriesArray.push({
+              name: "上一次累计变化曲线",
+              type: "line",
+              smooth: true,
+              lineStyle: {
+                width: 3,
+                shadowColor: colors[0],
+                shadowBlur: 10,
+                shadowOffsetY: 10,
+              },
+              data: json.data[0].YesterdayPointtValueList,
+            });
+            seriesArray.push({
+              name: "当日累计变化曲线",
+              type: "line",
+              smooth: true,
+              lineStyle: {
+                width: 3,
+                shadowColor: colors[1],
+                shadowBlur: 10,
+                shadowOffsetY: 10,
+              },
+              data: json.data[0].PointtValueList,
+              markArea: {
+                data: [
+                  [
+                    {
+                      name: "60%",
+                      itemStyle: {
+                        color: "rgba(249, 249, 139, 1)",
+                      },
+                      xAxis: 24,
+                    },
+                    {
+                      xAxis: 32,
+                    },
+                  ],
+                  [
+                    {
+                      name: "80%",
+                      itemStyle: {
+                        color: "rgba(250, 216, 152, 1)",
+                      },
+                      xAxis: 32,
+                    },
+                    {
+                      xAxis: 40,
+                    },
+                  ],
+                  [
+                    {
+                      name: "累计值预警",
+                      itemStyle: {
+                        color: "rgba(250, 166, 164, 1)",
+                      },
+                      xAxis: 40,
+                    },
+                    {
+                      xAxis: 100,
+                    },
+                  ],
+                ],
+              },
+            });
+            resolve(seriesArray);
+          });
+        });
+      }
+
+      $(function () {
+        initChart(option, charElement);
+      });
+    </script>
+  </body>
+</html>
