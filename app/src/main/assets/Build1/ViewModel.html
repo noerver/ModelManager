@@ -354,15 +354,14 @@
 
         function initThree() {
           var canvas3d = document.getElementById("canvas3d"); //获取div
-          width =412; //获取画布「canvas3d」的宽
-          height =412; //获取画布「canvas3d」的高
+          width = window.innerWidth; //获取画布「canvas3d」的宽
+          height = 412; //获取画布「canvas3d」的高
           renderer = new THREE.WebGLRenderer({
             antialias: true,
             preserveDrawingBuffer: true,
             logarithmicDepthBuffer: true,
           }); //生成渲染器对象
-          //renderer.setSize(width, height);//指定渲染器的高宽（和画布框大小一致）
-          renderer.setSize(412, 412); //指定渲染器的高宽（和画布框大小一致）
+          renderer.setSize(width, height); //指定渲染器的高宽（和画布框大小一致）
           canvas3d.appendChild(renderer.domElement); //追加canvas元素到div中
           renderer.shadowMap.enabled = false; //是否允许渲染阴影
           //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -422,54 +421,49 @@
         // 加载物体
         function initObject() {
           var loader1 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader1.load(
-            "../FileModel/1-二层地库楼板.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader1.load("../FileModel/1-二层地库楼板.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group1.add(mesh);
-                      scene.add(group1);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group1.add(mesh);
+                    scene.add(group1);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader2 = new THREE.ObjectLoader(); //用于加载json格式的模型
           loader2.load(
-            '../FileModel/2-二层地库结构柱.rvt.json',
+            "../FileModel/2-二层地库结构柱.rvt.json",
             function (obj) {
               for (var i = 0; i < obj.children.length; i++) {
                 //遍历json子对象数组
@@ -514,280 +508,250 @@
           );
 
           var loader3 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader3.load(
-            "../FileModel/3-二层地库墙.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader3.load("../FileModel/3-二层地库墙.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group3.add(mesh);
-                      scene.add(group3);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group3.add(mesh);
+                    scene.add(group3);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader4 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader4.load(
-            "../FileModel/4-原地库墙.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader4.load("../FileModel/4-原地库墙.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group4.add(mesh);
-                      scene.add(group4);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group4.add(mesh);
+                    scene.add(group4);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader5 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader5.load(
-            '../FileModel/5-原地库楼板.rvt.json',
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader5.load("../FileModel/5-原地库楼板.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group5.add(mesh);
-                      scene.add(group5);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group5.add(mesh);
+                    scene.add(group5);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader6 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader6.load(
-            "../FileModel/6-原地库结构柱.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader6.load("../FileModel/6-原地库结构柱.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group6.add(mesh);
-                      scene.add(group6);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group6.add(mesh);
+                    scene.add(group6);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader7 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader7.load(
-            "../FileModel/7-室外地坪楼板.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader7.load("../FileModel/7-室外地坪楼板.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group7.add(mesh);
-                      scene.add(group7);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group7.add(mesh);
+                    scene.add(group7);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
 
           var loader8 = new THREE.ObjectLoader(); //用于加载json格式的模型
-          loader8.load(
-            "../FileModel/8-其他.rvt.json",
-            function (obj) {
-              for (var i = 0; i < obj.children.length; i++) {
-                //遍历json子对象数组
-                if (obj.children[i].hasOwnProperty("geometry")) {
-                  obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
-                  obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
-                  obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
-                  objects.push(obj.children[i]);
-                }
-                if (obj.children[i].children.length > 0) {
-                  for (var k = 0; k < obj.children[i].children.length; k++) {
-                    if (
-                      obj.children[i].children[k].hasOwnProperty("geometry")
-                    ) {
-                      obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
-                      obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
-                      ssMaterial = null;
-                      ssMaterial = obj.children[i].children[k].material; //赋予材质
-                      ssMaterial.clipShadows = true; //显示被剪切
-                      ssMaterial.clipIntersection = false;
-                      ssMaterial.wireframe = false;
+          loader8.load("../FileModel/8-其他.rvt.json", function (obj) {
+            for (var i = 0; i < obj.children.length; i++) {
+              //遍历json子对象数组
+              if (obj.children[i].hasOwnProperty("geometry")) {
+                obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                objects.push(obj.children[i]);
+              }
+              if (obj.children[i].children.length > 0) {
+                for (var k = 0; k < obj.children[i].children.length; k++) {
+                  if (obj.children[i].children[k].hasOwnProperty("geometry")) {
+                    obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                    obj.children[i].children[k].geometry.computeFaceNormals(); //计算面的法向量值
+                    ssMaterial = null;
+                    ssMaterial = obj.children[i].children[k].material; //赋予材质
+                    ssMaterial.clipShadows = true; //显示被剪切
+                    ssMaterial.clipIntersection = false;
+                    ssMaterial.wireframe = false;
 
-                      ssMaterial.side = THREE.DoubleSide; //材质双面显示
-                      var mesh = new THREE.Mesh(
-                        obj.children[i].children[k].geometry,
-                        ssMaterial
-                      );
-                      mesh.position.set(0, 0, 0);
-                      mesh.name = obj.children[i].children[k].name;
-                      //console.log(ssMaterial);
-                      mesh.userData = obj.children[i].userData; //存储自定义数据的对象
-                      mesh.type = obj.children[i].children[k].type;
-                      group8.add(mesh);
-                      scene.add(group8);
-                      //scene.add(mesh);
-                      objects.push(mesh);
-                    }
+                    ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                    var mesh = new THREE.Mesh(
+                      obj.children[i].children[k].geometry,
+                      ssMaterial
+                    );
+                    mesh.position.set(0, 0, 0);
+                    mesh.name = obj.children[i].children[k].name;
+                    //console.log(ssMaterial);
+                    mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                    mesh.type = obj.children[i].children[k].type;
+                    group8.add(mesh);
+                    scene.add(group8);
+                    //scene.add(mesh);
+                    objects.push(mesh);
                   }
                 }
               }
             }
-          );
+          });
         }
 
         //模型渲染
