@@ -33,7 +33,10 @@
   <!-- 引入threejs扩展控件-轨道控制器 -->
   <script src="js/OrbitControls.js"></script>
   <script src="js/LegacyJSONLoader.js"></script>
-  <script src="./index.js"></script>
+  <script src="https://static.bimface.com/api/BimfaceSDKLoader/BimfaceSDKLoader@latest-release.js"></script>
+  <script src="https://static.bimface.com/attach/24802b119f1c4740b120ad598ffcfd7e_ichart.1.2.js"></script>
+  <script src="https://static.bimface.com/attach/b83e2d8a649b4155a121be7bafe41018_ichart.js"></script>
+  <script type="module" src="./index.js"></script>
 </head>
 
 <body>
@@ -41,23 +44,19 @@
 
   <div class="d-flex flex-column" style="min-height: 100vh">
     <div class="d-flex" style="text-align: center; bottom: 0">
-      <button class="btn btn-primary flex-fill" onclick="threeStart()">
+      <button id="idShow3D" class="btn btn-primary flex-fill">
         显示3D建筑图像
       </button>
       <input class="btn btn-primary flex-fill" type="button" value="开启剖面框"  id="btnSection"></input>
+      <button id="idAddSphere" class="btn btn-primary flex-fill">
+        添加标记点
+      </button>
+      <input id="s.x" value="0">
+      <input id="s.y" value="0">
+      <input id="s.x" value="0">
     </div>
-
     <canvas id="canvas3d" class="flex-grow-1" style="background-color: whitesmoke;" title="构件信息表"></canvas>
-
-    <!----------------------------   构建信息表 开始  ------------------------------>
-
-    <!----------------------------   构建信息表 结束  ------------------------------>
-
-    <!----------------------------   模型处理部分 开始  ------------------------------>
-
-    <!----------------------------   模型处理部分 结束   ------------------------------>
   </div>
-  <!---------------------------------------   模型管理 结束   ------------------------------------------>
 </body>
 
 </html>

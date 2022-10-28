@@ -1,0 +1,275 @@
+﻿<script>
+    $(function () {
+        initGcjcgxmxTable();
+    });
+    function initGcjcgxmxTable(queryParame) {
+        $('#testmx').datagrid({
+            title: '第一道钢砼支撑轴力监测值表',
+            iconCls: 'icon-save',
+            //height: 480,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: "/BIMModel/GetQtGcjcgtzczl1mxShow?SpotName='@Model.SpotName'",
+            sortName: 'id',
+            sortOrder: 'asc',
+            //striped:true,
+            border: true,
+            remoteSort: false,
+            idField: 'id',
+            pagination: false,
+            rownumbers: true,
+            queryParams: queryParame,
+            columns: [[
+                { field: 'ck', checkbox: true },
+                { field: 'id', title: 'id', width: 50, sortable: true, hidden: 'true' },
+                { field: 'jcd', title: "监测点", width: 100, sortable: true, },
+                { field: 'ms', title: '测量名', width: 100, sortable: true },
+                {
+                    field: 'clz', title: '测量值', width: 100, sortable: true,
+                    formatter: function (value, row, index) {
+                        if (value != "") {
+                            if (isNotANumber(value)) {
+                                var jjz_lj = row["jjz"].toString();
+                                if (jjz_lj != "") {
+                                    if (jjz_lj.indexOf("±") >= 0) {
+                                        jjz_lj = jjz_lj.replace("±", "");
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(value) >= 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            } else if (parseFloat(value) < 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl <= -60 && bhl >= -80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl <= -80 && bhl > -100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl <= -100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                        return value;
+
+
+                    }
+                },
+
+                {
+                    field: 'jsz', title: '平均值', width: 100, sortable: true,
+                    formatter: function (value, row, index) {
+                        if (value != "") {
+                            if (isNotANumber(value)) {
+                                var jjz_lj = row["jjz"].toString();
+                                if (jjz_lj != "") {
+                                    if (jjz_lj.indexOf("±") >= 0) {
+                                        jjz_lj = jjz_lj.replace("±", "");
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(value) >= 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            } else if (parseFloat(value) < 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl <= -60 && bhl >= -80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl <= -80 && bhl > -100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl <= -100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                        return value;
+
+
+                    }
+                },
+                {
+                    field: 'bhz', title: '变化值', width: 100, sortable: true,
+                    formatter: function (value, row, index) {
+                        if (value != "") {
+                            if (isNotANumber(value)) {
+                                //if ((parseFloat(value) >= 60 && parseFloat(value) < 80) || (parseFloat(value) <= -60 && parseFloat(value) >= -80)) {
+                                //    return "<span style='color:yellow'>" + value + "</span>";
+                                //} else if ((parseFloat(value) >= 80 && parseFloat(value) < 100) || (parseFloat(value) <= -80 && parseFloat(value) > -100)) {
+                                //    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                //} else if (parseFloat(value) >= 100 || parseFloat(value) <= -100) {
+                                //    return "<span style='color:red'>" + value + "</span>";
+                                //}
+                                var jjz_lj = row["jjz"].toString();
+                                if (jjz_lj != "") {
+                                    if (jjz_lj.indexOf("±") >= 0) {
+                                        jjz_lj = jjz_lj.replace("±", "");
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(value) >= 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            } else if (parseFloat(value) < 0 && parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl <= -60 && bhl >= -80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl <= -80 && bhl > -100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl <= -100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if (isNotANumber(jjz_lj)) {
+                                            if (parseFloat(jjz_lj) != 0) {
+                                                var bhl = (parseFloat(value) * 100 / parseFloat(jjz_lj)).toFixed(2);
+                                                if (bhl >= 60 && bhl < 80) {
+                                                    return "<span style='color:yellow'>" + value + "</span>";
+                                                } else if (bhl >= 80 && bhl < 100) {
+                                                    return "<span style='color:#FFAA33'>" + value + "</span>";
+                                                } else if (bhl >= 100) {
+                                                    return "<span style='color:red'>" + value + "</span>";
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+                                }
+                                return value;
+                            }
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'cs', title: '次数', width: 80, sortable: true,
+                    formatter: function (value, row, index) {
+                        if (value != "") {
+                            return "第" + value + "次";
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'jcsj', title: "监测时间", width: 100, sortable: true,
+                    formatter: function (value, row, index) {
+                        return (eval(value.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"))).pattern("yyyy-MM-dd");
+                    }
+                },
+                { field: 'bz', title: '备注', width: 100, sortable: true },
+                { field: 'jjz', title: '警戒值', width: 100, sortable: true }
+
+            ]],
+            onLoadSuccess: function (data) {                      //data是默认的表格加载数据，包括rows和Total
+                var mark = 1;                                                 //这里涉及到简单的运算，mark是计算每次需要合并的格子数
+                for (var i = 1; i < data.rows.length; i++) {     //这里循环表格当前的数据
+                    if (data.rows[i]['jcd'] == data.rows[i - 1]['jcd']) {   //后一行的值与前一行的值做比较，相同就需要合并
+                        mark += 1;
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'jcd',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'jsz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'bhz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'cs',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'jcsj',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'bz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: i + 1 - mark,           //datagrid的index，表示从第几行开始合并；紫色的内容需是最精髓的，就是记住最开始需要合并的位置
+                            field: 'jjz',                 //合并单元格的区域，就是clomun中的filed对应的列
+                            rowspan: mark                //纵向合并的格数，如果想要横向合并，就使用colspan：mark
+                        });
+                    } else {
+                        mark = 1;                        //一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
+                    }
+                }
+                //-----------------------------------
+
+            },
+             
+        });
+    }
+
+    
+</script>
+<div>
+    <table id="testmx"></table>
+</div>

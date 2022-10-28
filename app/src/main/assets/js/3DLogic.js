@@ -145,29 +145,29 @@ var Model = Model || {};
         const z1 = -vMinz + vspc;
         const z2 = vMaxz + vspc;
 
+        console.log("x1", x1);
+        console.log("x2", x2);
+        console.log("y1", y1);
+        console.log("y2", y2);
+        console.log("z1", z1);
+        console.log("z2", z2);
 
-		console.log("x1",x1);
-		console.log("x2",x2);
-		console.log("y1",y1);
-		console.log("y2",y2);
-		console.log("z1",z1);
-		console.log("z2",z2);
-		
-
-
-        _this.clipPlanex1 = new THREE.Plane(new THREE.Vector3(-1, 0, 0), -1011.5);
-        _this.clipPlanex2 = new THREE.Plane(new THREE.Vector3(1, 0, 0),240101.5);
+        _this.clipPlanex1 = new THREE.Plane(
+          new THREE.Vector3(-1, 0, 0),
+          10011.5
+        );
+        _this.clipPlanex2 = new THREE.Plane(new THREE.Vector3(1, 0, 0), 50011.5);
         _this.clipPlaney1 = new THREE.Plane(new THREE.Vector3(0, 1, 0), y1);
         _this.clipPlaney2 = new THREE.Plane(new THREE.Vector3(0, -1, 0), y2);
         _this.clipPlanez1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), z1);
-        _this.clipPlanez2 = new THREE.Plane(new THREE.Vector3(0, 0, -1), z2);
+        _this.clipPlanez2 = new THREE.Plane(new THREE.Vector3(0, 0, -1), z2);      
 
-		// _this.clipPlanex1 = new THREE.Plane(new THREE.Vector3(-1, 0, 0), vMaxx + vspc);
-		// _this.clipPlanex2 = new THREE.Plane(new THREE.Vector3(1, 0, 0), -vMinx + vspc);
-		// _this.clipPlaney1 = new THREE.Plane(new THREE.Vector3(0, 1, 0), -vMiny + vspc);
-		// _this.clipPlaney2 = new THREE.Plane(new THREE.Vector3(0, -1, 0), vMaxy + vspc);
-		// _this.clipPlanez1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), -vMinz + vspc);
-		// _this.clipPlanez2 = new THREE.Plane(new THREE.Vector3(0, 0, -1), vMaxz + vspc);
+        // _this.clipPlanex1 = new THREE.Plane(new THREE.Vector3(-1, 0, 0), vMaxx + vspc);
+        // _this.clipPlanex2 = new THREE.Plane(new THREE.Vector3(1, 0, 0), -vMinx + vspc);
+        // _this.clipPlaney1 = new THREE.Plane(new THREE.Vector3(0, 1, 0), -vMiny + vspc);
+        // _this.clipPlaney2 = new THREE.Plane(new THREE.Vector3(0, -1, 0), vMaxy + vspc);
+        // _this.clipPlanez1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), -vMinz + vspc);
+        // _this.clipPlanez2 = new THREE.Plane(new THREE.Vector3(0, 0, -1), vMaxz + vspc);
 
         _this.clipPlanes = [
           _this.clipPlanex1,

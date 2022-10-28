@@ -89,7 +89,6 @@
       const charElement = document.getElementById("main");
       function initChart(options, chartElement) {
         const myChart = echarts.init(document.getElementById("main"));
-
         loadData().then((seriesArray) => {
           option.series = seriesArray;
           myChart.setOption(options);
