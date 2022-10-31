@@ -5,18 +5,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>DemoHtml</title>
-  <script type="text/javascript">
-    document.addEventListener("plusready", function () {
-      //console.log("所有plus api都应该在此事件发生后调用，否则会出现plus is undefined。")
-    });
-
-    // 打开新Webview窗口
-    function openNewWebview() {
-      var wv = plus.webview.create("http://www.dcloud.io/");
-      wv.show();
-    }
-  </script>
-
   <link href="css/easyui.css" rel="stylesheet" />
   <link href="css/icon.css" rel="stylesheet" />
   <link href="Content/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
@@ -27,37 +15,27 @@
 
   <!--引入three.js三维引擎-->
   <script src="js/three.js"></script>
-  <!-- 引入threejs剖切js -->
-  <script src="js/3DLogic.js"></script>
-  <script src="js/Clipping.js"></script>
-  <!-- 引入threejs扩展控件-轨道控制器 -->
   <script src="js/OrbitControls.js"></script>
-  <script src="js/LegacyJSONLoader.js"></script>
-  <script src="./index.js"></script>
+  <script type="module" src="./index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 </head>
 
 <body>
-  <!---------------------------------------   模型管理 开始  ------------------------------------------>
-
-  <div class="d-flex flex-column" style="min-height: 100vh">
+  <div id="three_model" class="d-flex flex-column" style="min-height: 100vh">
     <div class="d-flex" style="text-align: center; bottom: 0">
-      <button class="btn btn-primary flex-fill" onclick="threeStart()">
+      <button id="idShow3D" @click="loadObject" class="btn btn-primary flex-fill">
         显示3D建筑图像
       </button>
       <input class="btn btn-primary flex-fill" type="button" value="开启剖面框"  id="btnSection"></input>
+      <button id="idAddSphere" class="btn btn-primary flex-fill">
+        添加标记点
+      </button>
+      <input id="s.x" v-model="currentSphere.position.x">
+      <input id="s.y" v-model="currentSphere.position.y">
+      <input id="s.x" v-model="currentSphere.position.z">
     </div>
-
     <canvas id="canvas3d" class="flex-grow-1" style="background-color: whitesmoke;" title="构件信息表"></canvas>
-
-    <!----------------------------   构建信息表 开始  ------------------------------>
-
-    <!----------------------------   构建信息表 结束  ------------------------------>
-
-    <!----------------------------   模型处理部分 开始  ------------------------------>
-
-    <!----------------------------   模型处理部分 结束   ------------------------------>
   </div>
-  <!---------------------------------------   模型管理 结束   ------------------------------------------>
 </body>
 
 </html>

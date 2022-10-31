@@ -12,9 +12,6 @@
     <script src="../Scripts/easyUI/jquery.easyui.min.js"></script>
     <!--引入three.js三维引擎-->
     <script src="../Scripts/three/three.js"></script>
-    <!-- 引入threejs剖切扩展控件 -->
-    <script src="../Scripts/three/SZ3DLogic.js"></script>
-    <script src="../Scripts/three/SZClipping.js"></script>
     <!-- 引入threejs扩展控件-轨道控制器 -->
     <script src="../Scripts/three/OrbitControls.js"></script>
     <script>
@@ -418,8 +415,106 @@
         var group8 = new THREE.Group();
         group8.name = "八阶段";
 
-        // 加载物体
+        function getGroup(index) {
+          switch (index) {
+            case 0:
+              return group1;
+              break;
+            case 1:
+              return group2;
+              break;
+            case 2:
+              return group3;
+              break;
+            case 3:
+              return group4;
+              break;
+            case 4:
+              return group5;
+              break;
+            case 5:
+              return group6;
+              break;
+            case 6:
+              return group7;
+              break;
+            case 7:
+              return group8;
+              break;
+            default:
+              return null;
+          }
+        }
+
         function initObject() {
+          var strfiles = window.localStorage.getItem("files");
+
+          if (strfiles) {
+            var files = JSON.parse(strfiles);
+
+            let indexFiles = 0;
+            for (let key in files) {
+              const fileName = "../FileModel/" + files[key];
+              if (fileName) {
+                const loader = new THREE.ObjectLoader();
+                const indexFile =indexFiles;
+                loader.load(fileName, function (obj) {
+                  for (var i = 0; i < obj.children.length; i++) {
+                    //遍历json子对象数组
+                    if (obj.children[i].hasOwnProperty("geometry")) {
+                      obj.children[i].geometry.mergeVertices(); //检查重复顶点并移除
+                      obj.children[i].castShadow = false; //对象是否被渲染到阴影贴图中
+                      obj.children[i].geometry.computeFaceNormals(); //计算面的法向量值
+                      objects.push(obj.children[i]);
+                    }
+                    if (obj.children[i].children.length > 0) {
+                      for (
+                        var k = 0;
+                        k < obj.children[i].children.length;
+                        k++
+                      ) {
+                        if (
+                          obj.children[i].children[k].hasOwnProperty("geometry")
+                        ) {
+                          obj.children[i].children[k].geometry.mergeVertices(); //检查重复顶点并移除
+                          obj.children[i].children[
+                            k
+                          ].geometry.computeFaceNormals(); //计算面的法向量值
+                          ssMaterial = null;
+                          ssMaterial = obj.children[i].children[k].material; //赋予材质
+                          ssMaterial.clipShadows = true; //显示被剪切
+                          ssMaterial.clipIntersection = false;
+                          ssMaterial.wireframe = false;
+
+                          ssMaterial.side = THREE.DoubleSide; //材质双面显示
+                          const mesh = new THREE.Mesh(
+                            obj.children[i].children[k].geometry,
+                            ssMaterial
+                          );
+                          mesh.position.set(0, 0, 0);
+                          mesh.name = obj.children[i].children[k].name;
+                          //console.log(ssMaterial);
+                          mesh.userData = obj.children[i].userData; //存储自定义数据的对象
+                          mesh.type = obj.children[i].children[k].type;
+                          const group = getGroup(indexFile);
+                          group.add(mesh);
+                          scene.add(group);
+                          //scene.add(mesh);
+                          objects.push(mesh);
+                        }
+                      }
+                    }
+                  }
+                });
+              }
+
+              indexFiles++;
+            }
+          }
+        }
+
+        // 加载物体
+        function initObject_bak() {
           var loader1 = new THREE.ObjectLoader(); //用于加载json格式的模型
           loader1.load("../FileModel/1-二层地库楼板.rvt.json", function (obj) {
             for (var i = 0; i < obj.children.length; i++) {

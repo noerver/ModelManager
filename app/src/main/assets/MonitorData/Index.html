@@ -1,0 +1,618 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+    <link href="../Content/jquery-easyui-1.8.8/themes/icon.css" rel="stylesheet" />
+    <link href="../Content/jquery-easyui-1.8.8/themes/default/easyui.css" rel="stylesheet" />
+    <link href="../Content/Site.css" rel="stylesheet" />
+
+
+    <script src="../Scripts/jquery-3.5.0.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/jquery.easyui.min.js"></script>
+    <script src="../Content/jquery-easyui-1.8.8/locale/easyui-lang-zh_CN.js"></script>
+
+    <script src="../Content/jquery-easyui-1.8.8/datapattern2.js"></script>
+
+    <script src="../Scripts/echarts/echarts.js"></script>
+    <title>Index</title>
+    <script type="text/javascript">
+        $(function () {
+            initTable();
+            initSelect();
+            SearchInfo();
+            //initCheckbox();
+            //添加对话框，上传控件初始化
+            $('#file_upload').filebox({
+                buttonText: '选择文件',  //按钮文本
+                buttonAlign: 'right',   //按钮对齐
+                //multiple: true,       //是否多文件方式
+                accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel',//指定文件类型
+                onChange: function (e) {
+                    UploadFile(this, "file_upload");//上传处理
+                }
+            });
+            $("#SearchPoint").change(function () {
+                initDates();
+            });
+        });
+        function initTable(queryData) {
+            $('#test').datagrid({
+                title: '监测点数据',
+                iconCls: 'icon-save',
+                height: 350,
+                width: 700,
+                nowrap: true,
+                autoRowHeight: false,
+                striped: true,
+                collapsible: true,
+                url: '/MonitorData/GetAll',
+                sortName: 'ID',
+                sortOrder: 'asc',
+                //striped:true,
+                border: true,
+                remoteSort: false,
+                idField: 'ID',
+                pagination: true,
+                rownumbers: true,
+                queryParams: queryData,
+                columns: [[
+                    { field: 'ck', checkbox: true },
+                    { field: 'ID', title: 'ID', width: 50, sortable: true },
+                    { field: 'Depth', title: '深度', width: 50, sortable: true },
+                    { field: 'MonitoringPoint', title: "监测点", width: 50, sortable: true, },
+                    { field: 'YesterdayPointtValue', title: "上一次监测值", width: 100, sortable: true, },
+                    { field: 'PointtValue', title: "本日监测值", width: 100, sortable: true, },
+                    { field: 'VariationValue', title: "本次变化", width: 100, sortable: true, },
+                    { field: 'MonitoringDate', title: "日期", width: 100, sortable: true, },
+                ]],
+
+                toolbar: [{
+                    id: 'btncut',
+                    text: '修改',
+                    iconCls: 'icon-cut',
+                    handler: function () {
+
+                        //实现弹出修改用户信息的层
+                        ShowUpdateUserRoleDialog();
+                    }
+                }]
+            });
+        }
+        function initSelect() {
+
+            $.getJSON("/MonitorData/GetPoints", function (json) {
+
+                for (var i = 0; i < json.data.length; i++) {
+                    $("#SearchPoint").append("<option value='" + json.data[i] + "'>" + json.data[i] + "</option>");
+                }
+            });
+            initDates();
+        }
+        function initDates() {
+            var point = $("#SearchPoint").find("option:selected").text();
+            $.getJSON("/MonitorData/GetDates?point=" + point, function (json) {
+
+                for (var i = 0; i < json.data.length; i++) {
+                    if (i == 0) {
+                        $("#SearchDate").append("<option value='" + json.data[i] + "' selected='selected'>" + json.data[i] + "</option>");
+                    } else {
+                        $("#SearchDate").append("<option value='" + json.data[i] + "'>" + json.data[i] + "</option>");
+                    }
+                    //$("#checkboxdiv").append("<input type='checkbox' name=" + json.data[i] + " value=" + json.data[i] + " />" + json.data[i]);
+                }
+            });
+        }
+        //上传文件操作
+        function UploadFile(_obj, file_ctrlname) {
+            var files = $("#" + file_ctrlname).next().find('input[type=file]')[0].files;
+            //console.log(files);
+
+            //传入this参数，也可以用这个获取文件
+
+            if (files[0]) {
+                //构建一个FormData存储复杂对象
+                var formData = new FormData();
+                formData.append('Filedata', files[0]);//默认的文件数据名为“Filedata”
+
+                $.ajax({
+                    url: '/MonitorData/Upload', //单文件上传
+                    type: 'POST',
+                    processData: false,
+                    contentType: false,
+                    data: formData,
+                    beforeSend: function () {
+                        load();
+                    },
+                    complete: function () {
+                        disLoad();
+                    },
+                    success: function (json) {
+
+                        $.messager.alert("提示", "添加" + json.add + "修改" + json.update + "跳过" + json.skip); //xhr.responseText
+                    },
+                    error: function (xhr, status, error) {
+                        $.messager.alert("提示", "操作失败"); //xhr.responseText
+                    }
+                });
+            }
+        }
+        //实现搜索的信息
+        function SearchInfo() {
+            $("#btnSerach").click(function () {
+                //首先获取角色类型的信息
+                var point = $("#SearchPoint").find("option:selected").text();
+                var date = $("#SearchDate").find("option:selected").text();
+                if (point == "---请选择---") {
+                    point = null;
+                }
+                if (date == "---请选择---") {
+                    date = null;
+                }
+                //获取要传递给前台的参数
+                var queryData = {
+                    Point: point,
+                    Date: date
+                };
+                //实现重新绑定用户查询的信息
+                initTable(queryData);
+                if (point != "---请选择---" && date != "---请选择---") {
+                    SetChart(point, date);
+                }
+
+                return false;
+            });
+        }
+        //弹出加载层
+        function load() {
+            $("<div class=\"datagrid-mask\"></div>").css({ display: "block", width: "100%", height: $(window).height() }).appendTo("body");
+            $("<div class=\"datagrid-mask-msg\"></div>").html("数据上传中，请稍候。。。").appendTo("body").css({ display: "block", left: ($(document.body).outerWidth(true) - 190) / 2, top: ($(window).height() - 45) / 2 });
+        }
+        //取消加载层
+        function disLoad() {
+            $(".datagrid-mask").remove();
+            $(".datagrid-mask-msg").remove();
+        }
+
+        //弹出修改用户的层的信息
+        function ShowUpdateUserRoleDialog() {
+            var UpdateUserRoleInfoID = $("#test").datagrid("getSelections");
+            if (UpdateUserRoleInfoID.length == 1) {
+                $("#UpdateUserRoleDialog").dialog("open").dialog("setTitle", "修改监测值");
+
+                //绑定修改用户角色显示的数据
+                BindUpdateUserRoleShow();
+            }
+            else {
+                $.messager.alert("友情提示", "每次只能修改一行数据，你已经选择了<font color='red' size='6'>" + UpdateUserRoleInfoID.length + "</font>行");
+            }
+        }
+        //绑定修改用户角色显示的信息
+        function BindUpdateUserRoleShow() {
+            //首先获取要修改的用户的ID
+            var UpdateUserRoleInfoID = $("#test").datagrid("getSelections")[0].ID;
+            //发送异步请求得到用户的数据返回
+            $.getJSON("/MonitorData/BindMonitorDataInfo", { ID: UpdateUserRoleInfoID }, function (date) {
+                //绑定数据显示到用户控件上面,RoleName1，RoleType1
+                $("#ID").val(date.ID);
+                $("#PointtValue").val(date.PointtValue);
+            })
+        }
+    </script>
+</head>
+<body>
+    <div style="height:800px; overflow:scroll">
+
+
+        <fieldset>
+            <legend>根据监测点获取数据</legend>
+            <div>
+
+                <label for="SearchPoint">监测点：</label>
+                <select id="SearchPoint" name="SearchPoint" editable="false">
+                    <option value="-1" selected="selected">---请选择---</option> 
+                </select>
+                <label for="SearchDate">日期：</label>
+                <select id="SearchDate" name="SearchDate" editable="false">
+                    <option value="-1" selected="selected">---请选择---</option>
+                </select>
+
+                <a href="#" class="easyui-linkbutton" iconcls="icon-search" id="btnSerach" name="btnSerach">搜索</a>
+                <form id="ffSearch" method="post" enctype="multipart/form-data">
+                    <div title="Excel导入操作" style="padding: 5px" data-options="iconCls:'icon-key'">
+                        <input class="easyui-validatebox" type="hidden" id="AttachGUID" name="AttachGUID" />
+                        <br />
+                        <input class="easyui-filebox" id="file_upload" style="width:300px" />
+                    </div>
+                </form>
+            </div>
+
+        </fieldset>
+
+        <!-------------------------- 实现对用户数据的显示------------------------->
+        <div>
+            <table id="test"></table>
+        </div>
+        <div id="UpdateUserRoleDialog" class="easyui-dialog" style="width: 360px;padding:10px 20px"
+             closed="true" resizable="true" modal="true" buttons="#dlg-buttons" align="center">
+            <form id="UserRoleUpdate" method="post" novalidate="novalidate">
+                <table id="tblUpdate">
+                    <tr>
+                        <th colspan="2">修改监测点值</th>
+                    </tr>
+                    <tr>
+                        <td><label for="ID">数据ID：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="ID" name="ID" readonly /></td>
+                        <td>
+                    </tr>
+
+                    <tr>
+                        <td><label for="RoleName">监测值：</label></td>
+                        <td><input class="easyui-validatebox" type="text" id="PointtValue" name="PointtValue" data-options="required:true,validType:'length[1,32]'" /></td>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align:center; padding-top:10px">
+                            <a href="javascript:void(0)" class="easyui-linkbutton" id="btnUpdateUserRole" iconcls="icon-ok">确定</a>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript:$('#UpdateUserRoleDialog').dialog('close')">关闭</a>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <div>
+            <div id="main" style="width: 50%;height:420px; float:left"></div>
+            <div id="mains" style="width: 50%;height:420px;float:left"></div>
+        </div>
+
+        <script type="text/javascript">
+            // 基于准备好的dom，初始化echarts实例
+
+            $(function () {
+
+                $("#btnUpdateUserRole").click(function () {
+                    var validate = $("#UserRoleUpdate").form('validate');
+                    if (validate == false) {
+                        return false;
+                    }
+                    //给前台传递修改数据的信息
+                    var postData = {
+                        ID: $("#ID").val(),
+                        PointtValue: $("#PointtValue").val()
+                    };
+
+                    //使用异步进行修改数据的信息
+                    $.post("/MonitorData/UpdateInfo", postData, function (date) {
+                        if (date == "OK") {
+                            //关闭层，刷新表单
+                            $("#UpdateUserRoleDialog").dialog('close');
+                            $("#test").datagrid('reload');
+                        }
+                        else {
+                            $.messager.alert("友情提示", "修改失败");
+                        }
+                    });
+
+                });
+            })
+            function SetChart(point, date) {
+                var myChart = echarts.init(document.getElementById('main'));
+                var myChart2 = echarts.init(document.getElementById('mains'));
+                var colors = ['#5793f3', '#d14a61', '#675bba'];
+                var seriesArray;
+                $.getJSON("./chart.json", function (json) {
+                    var length = json.data.length;
+                    seriesArray = new Array(length);
+                    //for (var i = 0; i < json.data.length; i++) {
+                    ////point, date
+                    //    console.log(json.data[i].List);
+                    seriesArray.push({
+                        name: '上一次累计变化曲线',
+                        type: 'line',
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            shadowColor: colors[0],
+                            shadowBlur: 10,
+                            shadowOffsetY: 10
+                        },
+                        data: json.data[0].YesterdayPointtValueList,
+                    });
+                    seriesArray.push({
+                        name: '当日累计变化曲线',
+                        type: 'line',
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            shadowColor: colors[1],
+                            shadowBlur: 10,
+                            shadowOffsetY: 10
+                        },
+                        data: json.data[0].PointtValueList,
+                        markArea: {
+                            data: [[{
+                                name: '60%',
+                                itemStyle: {
+                                    color: "rgba(249, 249, 139, 1)"
+                                },
+                                xAxis: 24
+                            }, {
+                                xAxis: 32
+                            }
+                            ], [{
+                                name: '80%',
+                                itemStyle: {
+                                    color: "rgba(250, 216, 152, 1)"
+                                },
+                                xAxis: 32
+                            }, {
+                                xAxis: 40
+                            }], [{
+                                name: '累计值预警',
+                                itemStyle: {
+                                    color: "rgba(250, 166, 164, 1)"
+                                },
+                                xAxis: 40
+                            }, {
+                                xAxis: 100
+                            }
+                            ]] 
+                        }
+                    });
+                    //}
+                    var option = {
+                        title: {
+                            text: '深层墙体水平位移（测斜）监测曲线',
+                            subtext: '累计至当日变化量',
+                            x: 'center'
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            x: 'left',
+                            y: 'top',
+                            data: ['上一次累计变化曲线', '当日累计变化曲线']
+                        },
+                        //tooltip: {
+                        //    trigger: 'axis',
+                        //    formatter: 'Temperature : <br/>{b}m : {c}mm'
+                        //},
+                        tooltip: {
+                            trigger: 'axis'
+                            //,
+                            //axisPointer: {
+                            //    type: 'cross',
+                            //    label: {
+                            //        backgroundColor: '#6a7985'
+                            //    }
+                            //}
+                        },
+                        toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '25%',
+                            bottom: 27,
+                            containLabel: true
+                        },
+                        xAxis: [
+                            {
+                                name: '水平位移(mm)',
+                                min: 0,
+                                max: 200,
+                                type: 'value',
+                                axisLine: { onZero: false },
+                                position: 'top',
+                                //axisLabel: {
+                                //    formatter: '{value} mm'
+                                //}
+                            }
+                        ],
+                        yAxis: [
+                            {
+                                name: '深度（m）',
+                                type: 'category',
+                                axisLine: { onZero: false },
+                                inverse: 'true',
+                                axisLabel: {
+                                    formatter: '{value} m'
+                                },
+                                boundaryGap: false,
+                                data:[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 22.5, 23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5, 28, 28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32, 32.5, 33, 33.5, 34, 34.5, 35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40]
+                                //data: ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '12.5', '13', '13.5', '14', '14.5', '15', '15.5', '16', '16.5', '17', '17.5', '18', '18.5', '19', '19.5', '20', '20.5', '21', '21.5', '22', '22.5', '23', '23.5', '24', '24.5', '25', '25.5', '26', '26.5', '27', '27.5']
+                            }],
+                        series: seriesArray
+                        //[
+                        //    {
+                        //        markArea: {
+                        //            data: [[{
+                        //                name: '预警值',
+                        //                xAxis: '24'
+                        //            }, {
+                        //                xAxis: '32'
+                        //            }], [{
+                        //                name: '预警值2',
+                        //                xAxis: '32'
+                        //            }, {
+                        //                xAxis: '40'
+                        //            }]]
+
+                        //        }
+
+                        //    }
+                        //]
+
+                    }
+
+
+                    var option2 = {
+                        title: {
+                            text: '本次变化',
+                            subtext: '报警值±3mm',
+                            x: 'center'
+                        },
+
+
+                        tooltip: {
+                            trigger: 'axis'
+
+                        },
+                        toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '25%',
+                            bottom: 27,
+                            containLabel: true
+                        },
+                        xAxis: [
+                            {
+                                name: '水平位移(mm)',
+                                type: 'value',
+                                axisLine: { onZero: false },
+                                position: 'top',
+
+                            }
+                        ],
+                        yAxis: [
+                            {
+                                name: '深度（m）',
+                                type: 'category',
+                                axisLine: { onZero: false },
+                                inverse: 'true',
+                                axisLabel: {
+                                    formatter: '{value} m'
+                                },
+                                boundaryGap: 0,
+                                data: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 22.5, 23, 23.5, 24, 24.5, 25, 25.5, 26, 26.5, 27, 27.5, 28, 28.5, 29, 29.5, 30, 30.5, 31, 31.5, 32, 32.5, 33, 33.5, 34, 34.5, 35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40]
+                                //data: ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '12.5', '13', '13.5', '14', '14.5', '15', '15.5', '16', '16.5', '17', '17.5', '18', '18.5', '19', '19.5', '20', '20.5', '21', '21.5', '22', '22.5', '23', '23.5', '24', '24.5', '25', '25.5', '26', '26.5', '27', '27.5']
+                            }],
+                        series: [{
+                            name: '监测数据',
+                            type: 'line',
+                            //smooth: true,
+                            lineStyle: {
+                                width: 3,
+                                shadowColor: colors[0],
+                                shadowBlur: 10,
+                                shadowOffsetY: 10
+                            },
+                            //markArea: {
+                            //    data: [[{
+                            //        name: '预警值',
+                            //        xAxis: 24
+                            //    }, {
+                            //        xAxis: 32
+                            //    }], [{
+                            //        name: '预警值2',
+                            //        xAxis: 32
+                            //    }, {
+                            //        xAxis: 40
+                            //    }]]
+                            //},
+                            markLine: {
+                                //name:'第一道水平支撑',
+                                lineStyle: {
+                                    width: 2
+                                },
+                                silent: true,
+                                data: [{
+                                    label: {
+                                        show: true,
+                                        formatter: '第一道钢砼支撑'
+                                    },
+                                    yAxis: 3
+                                }, {
+                                    label: {
+                                        show: true,
+                                        formatter: '第二道钢砼支撑'
+                                    },
+                                    yAxis: 13
+                                }, {
+                                    label: {
+                                        show: true,
+                                        formatter: '第三道钢砼支撑'
+                                    },
+                                    yAxis: 23
+                                }, {
+                                    label: {
+                                        show: true,
+                                        formatter: '第四道钢砼支撑'
+                                    },
+                                    yAxis: 32
+                                }]
+                            },
+                            //markLine: {
+                            //    data: [{
+                            //        type:'average'
+                            //    }],
+                            //    silent: false
+                            //},
+                            //markArea: {
+                            //    data: [[{
+                            //        name: '预警值',
+                            //        yAxis: '0'
+                            //    }, {
+                            //        yAxis: '3'
+                            //    }], [{
+                            //        //name: '预警值2',
+                            //        yAxis: '3'
+                            //    }, {
+                            //        yAxis: '6'
+                            //    }]
+                            //    ],
+                            //    itemStyle: {
+                            //        color: 'rgba(138, 222, 42, 1)'
+                            //    }
+                            //},
+                            //areaStyle: {
+                            //    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            //        offset: 0,
+                            //        color: '#8ec6ad'
+                            //    }, {
+                            //        offset: 1,
+                            //        color: '#ffe'
+                            //    }])
+                            //},
+                            data: json.data[0].VariationValueList
+                        }],
+                    };
+                    myChart.setOption(option);
+                    myChart2.setOption(option2);
+                });
+            }
+
+
+
+                                                                                                        //// 指定图表的配置项和数据
+                                                                                                        //var option = {
+                                                                                                        //    title: {
+                                                                                                        //        text: 'ECharts 入门示例'
+                                                                                                        //    },
+                                                                                                        //    tooltip: {},
+                                                                                                        //    legend: {
+                                                                                                        //        data: ['销量']
+                                                                                                        //    },
+                                                                                                        //    xAxis: {
+                                                                                                        //        data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"]
+                                                                                                        //    },
+                                                                                                        //    yAxis: {},
+                                                                                                        //    series: [{
+                                                                                                        //        name: '销量',
+                                                                                                        //        type: 'bar',
+                                                                                                        //        data: [5, 20, 36, 10, 10, 20]
+                                                                                                        //    }]
+                                                                                                        //};
+
+                                                                                                        // 使用刚指定的配置项和数据显示图表。
+
+        </script>
+    </div>
+</body>
+</html>

@@ -22,110 +22,53 @@
 
     <script src="../Scripts/layer/src/layer.js"></script>
     <script src="../Scripts/uploadify/Sample/jquery.uploadifive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 
-    <script type="text/javascript"></script>
-    <!-- <script type="text/javascript">
-        var uploadifyOnSelectError;
-        var uploadifyOnUploadError;
-        var uploadifyOnSelect;
-        var uploadifyOnUploadSuccess;
-        uploadifyOnSelectError = function (file, errorCode, errorMsg) {
-            var msgText = "上传失败\n";
-            switch (errorCode) {
-                case SWFUpload.QUEUE_ERROR.QUEUE_LIMIT_EXCEEDED:
-                    //this.queueData.errorMsg = "每次最多上传 " + this.settings.queueSizeLimit + "个文件";
-                    msgText += "每次最多上传 " + this.settings.queueSizeLimit + "个文件";
-                    break;
-                case SWFUpload.QUEUE_ERROR.FILE_EXCEEDS_SIZE_LIMIT:
-                    msgText += "文件大小超过限制( " + this.settings.fileSizeLimit + " )";
-                    break;
-                case SWFUpload.QUEUE_ERROR.ZERO_BYTE_FILE:
-                    msgText += "文件大小为0";
-                    break;
-                case SWFUpload.QUEUE_ERROR.INVALID_FILETYPE:
-                    msgText += "文件格式不正确，仅限 " + this.settings.fileTypeExts;
-                    break;
-                default:
-                    msgText += "错误代码：" + errorCode + "\n" + errorMsg;
+    <script type="module">
+      var uploadFile = new Vue({
+        el: "#upload_file",
+        data() {
+          return {
+            files: {
+              file1: "",
+              file2: "",
+              file3: "",
+              file4: "",
+              file5: "",
+              file6: "",
+              file7: "",
+              file8: "",
+            },
+          };
+        },
+        methods: {
+          upload() {
+            console.log(this.files);
+            window.localStorage.setItem("files", JSON.stringify(this.files));
+            window.open("./ViewModel.html");
+          },
+          onFileChange(event) {
+            var file = event.target.files[0];
+            const name = event.target.name;
+            if (file) {
+              this.files[name] = file.name;
             }
-            layer.msg(msgText);
-        };
-        uploadifyOnUploadError = function (file, errorCode, errorMsg, errorString) {
-            // 手工取消不弹出提示
-            if (errorCode == SWFUpload.UPLOAD_ERROR.FILE_CANCELLED
-                || errorCode == SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED) {
-                return;
-            }
-            var msgText = "上传失败\n";
-            switch (errorCode) {
-                case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-                    msgText += "HTTP 错误\n" + errorMsg;
-                    break;
-                case SWFUpload.UPLOAD_ERROR.MISSING_UPLOAD_URL:
-                    msgText += "上传文件丢失，请重新上传";
-                    break;
-                case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-                    msgText += "IO错误";
-                    break;
-                case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-                    msgText += "安全性错误\n" + errorMsg;
-                    break;
-                case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-                    msgText += "每次最多上传 " + this.settings.uploadLimit + "个";
-                    break;
-                case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-                    msgText += errorMsg;
-                    break;
-                case SWFUpload.UPLOAD_ERROR.SPECIFIED_FILE_ID_NOT_FOUND:
-                    msgText += "找不到指定文件，请重新操作";
-                    break;
-                case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
-                    msgText += "参数错误";
-                    break;
-                default:
-                    msgText += "文件:" + file.name + "\n错误码:" + errorCode + "\n"
-                        + errorMsg + "\n" + errorString;
-            }
-            layer.msg(msgText);
-        };
-
-        uploadifyOnSelect = function () {
-        };
-        uploadifyOnUploadSuccess = function (file, data, response) {
-            layer.msg(file.name + "\n\n" + response + "\n\n" + data);
-        };
-        $(function () {
-
-            $("#uploadify").uploadify({
-                uploader: '/PageBase/UploadifyFun', //处理上传的方法
-                swf: '/Scripts/lib/uploadify/uploadify.swf',
-                width: 80, // 按钮宽度
-                height: 60, //按钮高度
-                buttonText: "上传文件",
-                buttonCursor: 'hand',
-                fileSizeLimit: 20480,
-                fileobjName: 'Filedata',
-                fileTypeExts: '*.xlsx;*.docx', //扩展名
-                fileTypeDesc: "请选择xslx,docx文件", //文件说明
-                auto: false, //是否自动上传
-                multi: true, //是否一次可以选中多个文件
-                queueSizeLimit: 5, //允许同时上传文件的个数
-                overrideEvents: ['onSelectError', 'onDialogClose'],  // 是否要默认提示  要就不配置
-                onSelect: uploadifyOnSelect,
-                onSelectError: uploadifyOnSelectError,
-                onUploadError: uploadifyOnUploadError,
-                onUploadSuccess: uploadifyOnUploadSuccess
-            });
-        });
-    </script> -->
+          },
+        },
+      });
+    </script>
+    <style>
+      .layout_row {
+        display: inline-flex;
+        flex-direction: column;
+        text-align: left;
+        padding-left: 60px;
+      }
+    </style>
   </head>
   <body>
     <span id="uploadify"></span>
-    <!-- <div>
-      <a href="javascript:$('#uploadify').uploadify('upload','*');">上传</a>
-      <a href="javascript:$('#uploadify').uploadify('cancel', '*');">取消</a>
-    </div> -->
-    <div style="width: 100%; text-align: center">
+    <div id="upload_file" style="width: 100%; text-align: center">
       <div
         class="easyui-panel"
         title="<center>模型上传</center>"
@@ -134,30 +77,23 @@
           min-height: 420px;
           text-align: center;
           padding-top: 60px;
+          flex-basis: 1fr;
         "
         closable="false"
       >
-        <div style="text-align: left; padding-left: 60px; display:inline-block">
-          <input type="file" name="file1" accept=".json" size="300" />
+        <p>请上传.json模型文件</p>
+        <div class="layout_row">
+          <input
+            v-for="key in Object.keys(files)"
+            :key="key"
+            type="file"
+            :name="key"
+            accept=".json"
+            @change="onFileChange"
+            size="300"
+          />
           <br />
-          <input type="file" name="file2" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file3" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file4" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file5" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file6" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file7" accept=".json" size="300" />
-          <br />
-          <input type="file" name="file8" accept=".json" size="300" />
-          <br />
-          <p>请上传.json模型文件</p>
-          <p></p>
-          <p></p>
-          <input type="submit" value="上传" />
+          <button @click="upload">上传</button>
         </div>
       </div>
     </div>
