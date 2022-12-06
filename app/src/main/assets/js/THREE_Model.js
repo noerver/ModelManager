@@ -17,7 +17,20 @@ export default class THREE_Model {
       return document.getElementById(this.elementID);
     }
   }
-
+  loadObject2(filePath) {
+    const loader = new THREE.ObjectLoader();
+    if (!filePath) {
+      filePath = "./FileModel/test2.json";
+    }
+    loader.load(
+      filePath,
+      function (obj) {
+        this.mainObject = obj;
+        this.scene.add(obj);
+        this.rederAnimation();
+      }.bind(this)
+    );
+  }
   loadObject(filePath) {
     const loader = new THREE.ObjectLoader();
     if (!filePath) {
@@ -131,9 +144,11 @@ export default class THREE_Model {
   }
 
   onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.camera) {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
   createSpheres(INTERSECTED) {
     const geometry = new THREE.SphereGeometry(300, 366, 16);
@@ -145,35 +160,4 @@ export default class THREE_Model {
     this.scene.add(sphere);
     return sphere;
   }
-
-  // setupGui() {
-  //   // gui
-  //   gui = new THREE.GUI({ title: "Intensity" });
-
-  //   gui
-  //     .add(API, "lightProbeIntensity", 0, 1, 0.02)
-  //     .name("light probe")
-  //     .onChange(function () {
-  //       this.AmbientLight.intensity = API.lightProbeIntensity;
-  //       render();
-  //     });
-
-  //   gui
-  //     .add(API, "directionalLightIntensity", 0, 1, 0.02)
-  //     .name("directional light")
-  //     .onChange(function () {
-  //       this.directionalLight.intensity = API.directionalLightIntensity;
-  //       render();
-  //     });
-
-  //   // gui
-  //   //   .add(API, "envMapIntensity", 0, 1, 0.02)
-  //   //   .name("envMap")
-  //   //   .onChange(function () {
-  //   //     mesh.material.envMapIntensity = API.envMapIntensity;
-  //   //     render();
-  //   //   });
-  // }
 }
-
-//export default THREE_Model;
