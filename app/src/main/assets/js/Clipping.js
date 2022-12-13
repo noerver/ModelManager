@@ -264,7 +264,7 @@ class CAPSPGeometry extends THREE.Geometry {
 
 class CAPSClipBoxFace {
   constructor(axis, v0, v1, v2, v3, selection) {
-    var frontFaceGeometry = new CAPSPGeometry(v0, v1, v2, v3);
+    const frontFaceGeometry = new CAPSPGeometry(v0, v1, v2, v3);
     frontFaceGeometry.dynamic = true;
     selection.meshGeometries.push(frontFaceGeometry);
 
