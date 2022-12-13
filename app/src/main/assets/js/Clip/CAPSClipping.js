@@ -1,4 +1,6 @@
 import { CAPSMATERIAL, CAPSUNIFORMS } from "./ClipConfig.js";
+import CAPSClipBoxFace from "./CAPSClipBoxFace.js";
+import CAPSClipBoxLine from "./CAPSClipBoxLine.js";
 
 export default class CAPSClipping {
   constructor(low, high, limitvalue, limitstep) {
@@ -28,6 +30,28 @@ export default class CAPSClipping {
     this.meshGeometries = [];
     this.lineGeometries = [];
     this.selectables = [];
+
+    this.faces = [];
+    var f = this.faces;
+    this.faces.push(new CAPSClipBoxFace("y1", v[0], v[1], v[5], v[4], this));
+    this.faces.push(new CAPSClipBoxFace("z1", v[0], v[2], v[3], v[1], this));
+    this.faces.push(new CAPSClipBoxFace("x1", v[0], v[4], v[6], v[2], this));
+    this.faces.push(new CAPSClipBoxFace("x2", v[7], v[5], v[1], v[3], this));
+    this.faces.push(new CAPSClipBoxFace("y2", v[7], v[3], v[2], v[6], this));
+    this.faces.push(new CAPSClipBoxFace("z2", v[7], v[6], v[4], v[5], this));
+
+    var l0 = new CAPSClipBoxLine(v[0], v[1], f[0], f[1], this);
+    var l1 = new CAPSClipBoxLine(v[0], v[2], f[1], f[2], this);
+    var l2 = new CAPSClipBoxLine(v[0], v[4], f[0], f[2], this);
+    var l3 = new CAPSClipBoxLine(v[1], v[3], f[1], f[3], this);
+    var l4 = new CAPSClipBoxLine(v[1], v[5], f[0], f[3], this);
+    var l5 = new CAPSClipBoxLine(v[2], v[3], f[1], f[4], this);
+    var l6 = new CAPSClipBoxLine(v[2], v[6], f[2], f[4], this);
+    var l7 = new CAPSClipBoxLine(v[3], v[7], f[3], f[4], this);
+    var l8 = new CAPSClipBoxLine(v[4], v[5], f[0], f[5], this);
+    var l9 = new CAPSClipBoxLine(v[4], v[6], f[2], f[5], this);
+    var l10 = new CAPSClipBoxLine(v[5], v[7], f[3], f[5], this);
+    var l11 = new CAPSClipBoxLine(v[6], v[7], f[4], f[5], this);
 
     this.setBox();
     this.setUniforms();

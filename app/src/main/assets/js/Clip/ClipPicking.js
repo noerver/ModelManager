@@ -1,174 +1,197 @@
 import ClipBoxNormals from "./ClipBoxNormals.js";
 import { setAxis, creatPointer } from "./Util.js";
+import { CAPSMATERIAL, CAPSUNIFORMS } from "./ClipConfig.js";
 
 export default class ClipPicking {
   constructor(simulation) {
     this.intersected = null;
     var _this = this;
-    const ray = new THREE.Raycaster();
     this.pSimulation = simulation;
     const domElement = simulation.renderer.domElement;
-    const normalsA = new ClipBoxNormals();
+    this.axis ="";
+    this.intersectionObject =null;
 
-    var plane = null;
-
-    this.targeting = function (event) {
-      let pointer = creatPointer(event);
-      ray.setFromCamera(pointer, simulation.camera);
-      const intersects = ray.intersectObjects(
-        simulation.clipSelection.selectables
-      );
-
-      if (intersects.length > 0) {
-        const candidate = intersectionObject.object;
-
-        if (this.intersected !== candidate) {
-          if (this.intersected) {
-            this.intersected.guardian.rayOut();
-          }
-
-          candidate.guardian.rayOver();
-
-          this.intersected = candidate;
-
-          simulation.renderer.domElement.style.cursor = "pointer";
-          //simulation.throttledRender();
-        }
-      } else if (this.intersected) {
-        // this.intersected.guardian.rayOut();
-        // this.intersected = null;
-        // simulation.renderer.domElement.style.cursor = "auto";
-        // simulation.throttledRender();
-      }
-    };
+    this.plane = null;
 
     this.mark = function () {
       if (this.intersected) {
-        simulation.renderer.domElement.style.cursor = "pointer";
+        this.pSimulation.renderer.domElement.style.cursor = "pointer";
       }
     };
 
-    this.beginDrag = function (event) {
-      let pointer = creatPointer(event);
-      ray.setFromCamera(pointer, simulation.camera);
-      const intersects = ray.intersectObjects(
-        simulation.clipSelection.selectables
-      );
-
-      if (intersects.length > 0) {
-        event.preventDefault();
-        simulation.controls.enabled = false;
-        if (!(plane && plane.geometry)) {
-          const vlimitValue = simulation.clipSelection.limitValue;
-          plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(vlimitValue, vlimitValue, 4, 4),
-            CAPSMATERIAL.Invisible
-          );
-          simulation.scene.add(plane);
-        }
-
-        const intersectionObject = intersectionObject;
-        const intersectionPoint = intersectionObject.point;
-        const axis = intersectionObject.object.axis;
-
-        setAxis(intersectionPoint, axis);
-        plane.position.copy(intersectionPoint);
-
-        const newNormal = simulation.camera.position
-          .clone()
-          .sub(
-            simulation.camera.position
-              .clone()
-              .projectOnVector(normalsA.normals[axis])
-          );
-        plane.lookAt(newNormal.add(intersectionPoint));
-
-        simulation.renderer.domElement.style.cursor = "move";
-        //simulation.throttledRender();
-
-        var continueDrag = function (event) {
-          event.preventDefault();
-          let pointer = creatPointer(event);
-          ray.setFromCamera(pointer, simulation.camera);
-          const intersects = ray.intersectObject(plane);
-          let value = 0;
-          if (intersects.length > 0) {
-            if (axis === "x1" || axis === "x2") {
-              value = intersectionObject.point.x;
-            } else if (axis === "y1" || axis === "y2") {
-              value = intersectionObject.point.y;
-            } else if (axis === "z1" || axis === "z2") {
-              value = intersectionObject.point.z;
-            }
-
-            var vgPlane = null;
-            var vValue;
-            if (axis === "x2") {
-              vgPlane = simulation.clipPlanex1;
-              vValue = value + 0.1;
-            } else if (axis === "x1") {
-              vgPlane = simulation.clipPlanex2;
-              vValue = -(value - 0.1);
-            } else if (axis === "y1") {
-              vgPlane = simulation.clipPlaney1;
-              vValue = -(value - 0.1);
-            } else if (axis === "y2") {
-              vgPlane = simulation.clipPlaney2;
-              vValue = value + 0.1;
-            } else if (axis === "z1") {
-              vgPlane = simulation.clipPlanez1;
-              vValue = -(value - 0.1);
-            } else if (axis === "z2") {
-              vgPlane = simulation.clipPlanez2;
-              vValue = value + 0.1;
-            }
-            if (null != vgPlane) vgPlane.constant = vValue;
-
-            simulation.clipSelection.setValue(axis, value);
-            //simulation.throttledRender();
-          }
-        };
-
-        var endDrag = function (event) {
-          simulation.controls.enabled = true;
-          simulation.renderer.domElement.style.cursor = "pointer";
-          document.removeEventListener("mousemove", continueDrag, true);
-          document.removeEventListener("touchmove", continueDrag, true);
-          document.removeEventListener("mouseup", endDrag, false);
-          document.removeEventListener("touchend", endDrag, false);
-          document.removeEventListener("touchcancel", endDrag, false);
-          document.removeEventListener("touchleave", endDrag, false);
-        };
-
-        document.addEventListener("mousemove", continueDrag, true);
-        document.addEventListener("touchmove", continueDrag, true);
-
-        document.addEventListener("mouseup", endDrag, false);
-        document.addEventListener("touchend", endDrag, false);
-        document.addEventListener("touchcancel", endDrag, false);
-        document.addEventListener("touchleave", endDrag, false);
-      }
-    };
-
-    simulation.renderer.domElement.addEventListener(
+    this.pSimulation.renderer.domElement.addEventListener(
       "mousemove",
-      this.targeting,
+      this.targeting.bind(this),
       true
     );
 
-    simulation.renderer.domElement.addEventListener("onClick", this.mark, true);
+    this.pSimulation.renderer.domElement.addEventListener(
+      "onClick",
+      this.mark.bind(this),
+      true
+    );
 
-    simulation.renderer.domElement.addEventListener(
+    this.pSimulation.renderer.domElement.addEventListener(
       "mousedown",
-      this.beginDrag,
+      this.beginDrag.bind(this),
       false
     );
-    simulation.renderer.domElement.addEventListener(
+    this.pSimulation.renderer.domElement.addEventListener(
       "touchstart",
-      this.beginDrag,
+      this.beginDrag.bind(this),
       false
     );
   }
+
+  beginDrag(event) {
+    let pointer = creatPointer(event);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(pointer, this.pSimulation.camera);
+    const intersects = ray.intersectObjects(
+      this.pSimulation.clipSelection.selectables
+    );
+
+    if (intersects.length > 0) {
+      event.preventDefault();
+      this.pSimulation.controls.enabled = false;
+      if (!(this.plane && this.plane.geometry)) {
+        const vlimitValue = this.pSimulation.clipSelection.limitValue;
+        this.plane = new THREE.Mesh(
+          new THREE.PlaneGeometry(vlimitValue, vlimitValue, 4, 4),
+          CAPSMATERIAL.Invisible
+        );
+        this.pSimulation.scene.add(this.plane);
+      }
+
+      const intersectionObject = intersects[0];
+      const intersectionPoint = intersectionObject.point;
+      const axis = intersectionObject.object.axis;
+      this.intersectionObject =intersectionObject;
+      this.axis =axis;
+
+      setAxis(intersectionPoint, axis);
+      this.plane.position.copy(intersectionPoint);
+      const normalsA = new ClipBoxNormals();
+
+      const newNormal = this.pSimulation.camera.position
+        .clone()
+        .sub(
+          this.pSimulation.camera.position
+            .clone()
+            .projectOnVector(normalsA.normals[axis])
+        );
+      this.plane.lookAt(newNormal.add(intersectionPoint));
+
+      this.pSimulation.renderer.domElement.style.cursor = "move";
+      //simulation.throttledRender();
+
+      document.addEventListener(
+        "mousemove",
+        this.continueDrag.bind(this),
+        true
+      );
+      document.addEventListener(
+        "touchmove",
+        this.continueDrag.bind(this),
+        true
+      );
+
+      document.addEventListener("mouseup", this.endDrag.bind(this), false);
+      document.addEventListener("touchend", this.endDrag.bind(this), false);
+      document.addEventListener("touchcancel", this.endDrag.bind(this), false);
+      document.addEventListener("touchleave", this.endDrag.bind(this), false);
+    }
+  }
+
+  continueDrag = function (event) {
+    event.preventDefault();
+    let pointer = creatPointer(event);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(pointer, this.pSimulation.camera);
+    const intersects = ray.intersectObject(this.plane);
+    const axis = this.axis;
+    const intersectionObject =this.intersectionObject;
+    let value = 0;
+    if (intersects.length > 0) {
+      if (axis === "x1" || axis === "x2") {
+        value = intersectionObject.point.x;
+      } else if (axis === "y1" || axis === "y2") {
+        value = intersectionObject.point.y;
+      } else if (axis === "z1" || axis === "z2") {
+        value = intersectionObject.point.z;
+      }
+
+      var vgPlane = null;
+      var vValue;
+      if (axis === "x2") {
+        vgPlane = this.pSimulation.clipPlanex1;
+        vValue = value + 0.1;
+      } else if (axis === "x1") {
+        vgPlane = this.pSimulation.clipPlanex2;
+        vValue = -(value - 0.1);
+      } else if (axis === "y1") {
+        vgPlane = this.pSimulation.clipPlaney1;
+        vValue = -(value - 0.1);
+      } else if (axis === "y2") {
+        vgPlane = this.pSimulation.clipPlaney2;
+        vValue = value + 0.1;
+      } else if (axis === "z1") {
+        vgPlane = this.pSimulation.clipPlanez1;
+        vValue = -(value - 0.1);
+      } else if (axis === "z2") {
+        vgPlane = this.pSimulation.clipPlanez2;
+        vValue = value + 0.1;
+      }
+      if (null != vgPlane) vgPlane.constant = vValue;
+
+      this.pSimulation.clipSelection.setValue(axis, value);
+      //simulation.throttledRender();
+    }
+  };
+
+  endDrag(event) {
+    this.pSimulation.controls.enabled = true;
+    this.pSimulation.renderer.domElement.style.cursor = "pointer";
+    document.removeEventListener("mousemove", this.continueDrag, true);
+    document.removeEventListener("touchmove", this.continueDrag, true);
+    document.removeEventListener("mouseup", this.endDrag, false);
+    document.removeEventListener("touchend", this.endDrag, false);
+    document.removeEventListener("touchcancel", this.endDrag, false);
+    document.removeEventListener("touchleave", this.endDrag, false);
+  }
+
+  targeting(event) {
+    let pointer = creatPointer(event);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(pointer, this.pSimulation.camera);
+    const intersects = ray.intersectObjects(
+      this.pSimulation.clipSelection.selectables
+    );
+
+    if (intersects.length > 0) {
+      const intersectionObject = intersects[0];
+      const candidate = intersectionObject.object;
+
+      if (this.intersected !== candidate) {
+        if (this.intersected) {
+          this.intersected.guardian.rayOut();
+        }
+
+        candidate.guardian.rayOver();
+
+        this.intersected = candidate;
+
+        this.pSimulation.renderer.domElement.style.cursor = "pointer";
+        //simulation.throttledRender();
+      }
+    } else if (this.intersected) {
+      // this.intersected.guardian.rayOut();
+      // this.intersected = null;
+      // simulation.renderer.domElement.style.cursor = "auto";
+      // simulation.throttledRender();
+    }
+  }
+
   setEventListener(bFlag) {
     this.pSimulation.bPick = bFlag;
     return;
