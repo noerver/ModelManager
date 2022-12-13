@@ -1,4 +1,3 @@
-import * as THREE from "../three.module.js"
 export default class CAPSPGeometry extends THREE.Geometry {
     constructor(v0, v1, v2, v3) {
         super();

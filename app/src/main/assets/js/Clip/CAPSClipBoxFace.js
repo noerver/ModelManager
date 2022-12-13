@@ -1,4 +1,3 @@
-import * as THREE from "../three.module.js"
 import CAPSPGeometry from "./CAPSPGeometry.js"
 
 export default class CAPSClipBoxFace {

@@ -1,7 +1,8 @@
 import THREE_Model from "./js/THREE_Model.js";
 import { GUI } from "./js/jsm/libs/lil-gui.module.min.js";
-import Clipping from "./js/Clipping.js";
-import { ClipBoxNormals, CAPSClipping } from "./js/Clip"
+import { ClipBoxNormals, CAPSClipping, ClipPicking } from "./js/Clip/index.js";
+import { creatPointer } from "./js/Clip/Util.js";
+import { CAPSMATERIAL, CAPSUNIFORMS } from "./js/Clip/ClipConfig.js";
 
 new Vue({
   el: "#three_model",
@@ -38,7 +39,7 @@ new Vue({
       this.raycaster.setFromCamera(pointer, this.threeModel.camera);
       const objectMeshes = this.getSelectModel();
       const intersects = this.raycaster.intersectObjects(objectMeshes, true);
-      const selMaterial = Clipping.CAPSMATERIAL.selectMaterial;
+      const selMaterial = CAPSMATERIAL.selectMaterial;
 
       if (intersects.length > 0) {
         this.selectMesh = intersects[0];
@@ -46,11 +47,11 @@ new Vue({
       }
     },
     pointerMoive: function (event) {
-      let pointer = Clipping.creatPointer(event);
+      let pointer = creatPointer(event);
       this.raycaster.setFromCamera(pointer, this.threeModel.camera);
       const objectMeshes = this.getSelectModel();
       const intersects = this.raycaster.intersectObjects(objectMeshes, true);
-      const selMaterial = Clipping.CAPSMATERIAL.selectMaterial;
+      const selMaterial = CAPSMATERIAL.selectMaterial;
       let INTERSECTED = this.INTERSECTED;
       if (intersects.length > 0) {
         if (INTERSECTED != intersects[0].object) {
@@ -128,10 +129,10 @@ new Vue({
       const s = box.getSize();
       const zoom = 1.05;
       const normalsA = new ClipBoxNormals();
-      const planes = normalsA.createPlanes(s.x, s.y, s.z,zoom)
+      const planes = normalsA.createPlanes(s.x, s.y, s.z, zoom);
       this.threeModel.render.clippingPlanes = planes;
       this.threeModel.render.localClippingEnabled = true;
-      
+
       const clipSelection = new CAPSClipping(
         new THREE.Vector3(-s.x * zoom, -s.y * zoom, -s.z * zoom),
         new THREE.Vector3(s.x * zoom, s.y * zoom, s.z * zoom),
@@ -142,15 +143,14 @@ new Vue({
       this.threeModel.clipSelection = clipSelection;
       this.groupPlan = clipSelection.selectables;
 
-      const ssdaf = new Clipping.ClipPicking(this.threeModel);
+      const ssdaf = new ClipPicking(this.threeModel);
       ssdaf.setEventListener(true);
-      this.addGUI();
-      document
-        .getElementById("canvas3d")
-        .addEventListener("click", this.pointClick);
-
+      // this.addGUI();
+      // document
+      //   .getElementById("canvas3d")
+      //   .addEventListener("click", this.pointClick);
     },
-    clip() { },
+    clip() {},
     addGUI(clipTitle = "Clip", stepLimit = 100, min = 100, max = 1000) {
       const gui = new GUI({ title: clipTitle });
       const model = this.threeModel;

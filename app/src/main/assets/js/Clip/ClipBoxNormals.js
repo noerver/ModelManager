@@ -1,5 +1,3 @@
-import * as THREE from "../three.module.js"
-
 export default class ClipBoxNormals {
     constructor() {
         this.normals = {

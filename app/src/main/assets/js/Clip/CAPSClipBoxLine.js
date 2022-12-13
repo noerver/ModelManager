@@ -1,5 +1,3 @@
-import * as THREE from "../three.module.js"
-
 export default class CAPSClipBoxLine {
     constructor(v0, v1, f0, f1, selection) {
         const lineGeometry = new THREE.Geometry();

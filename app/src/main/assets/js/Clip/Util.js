@@ -17,8 +17,8 @@ const setAxis = function (intersectionPoint, axis) {
 
 const creatPointer = function (event) {
     const pointer = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     return pointer;
 }
 

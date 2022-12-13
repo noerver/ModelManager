@@ -1,18 +1,18 @@
 const CAPSUNIFORMS = {
-    clipping: {
-        color: { type: "c", value: new THREE.Color(0x3d9ecb) },
-        clippingLow: { type: "v3", value: new THREE.Vector3(0, 0, 0) },
-        clippingHigh: { type: "v3", value: new THREE.Vector3(0, 0, 0) },
-    },
+  clipping: {
+    color: { type: "c", value: new THREE.Color(0x3d9ecb) },
+    clippingLow: { type: "v3", value: new THREE.Vector3(0, 0, 0) },
+    clippingHigh: { type: "v3", value: new THREE.Vector3(0, 0, 0) },
+  },
 
-    caps: {
-        color: { type: "c", value: new THREE.Color(0xf83610) },
-    },
+  caps: {
+    color: { type: "c", value: new THREE.Color(0xf83610) },
+  },
 };
 
 const CAPSSHADER = {
-    vertex:
-        "\
+  vertex:
+    "\
             uniform vec3 color;\
             varying vec3 pixelNormal;\
             \
@@ -23,8 +23,8 @@ const CAPSSHADER = {
                 \
             }",
 
-    vertexClipping:
-        "\
+  vertexClipping:
+    "\
             uniform vec3 color;\
             uniform vec3 clippingLow;\
             uniform vec3 clippingHigh;\
@@ -43,8 +43,8 @@ const CAPSSHADER = {
                 \
             }",
 
-    fragment:
-        "\
+  fragment:
+    "\
             uniform vec3 color;\
             varying vec3 pixelNormal;\
             \
@@ -60,8 +60,8 @@ const CAPSSHADER = {
                 \
             }",
 
-    fragmentClipping:
-        "\
+  fragmentClipping:
+    "\
             uniform vec3 color;\
             uniform vec3 clippingLow;\
             uniform vec3 clippingHigh;\
@@ -96,8 +96,8 @@ const CAPSSHADER = {
                 \
             }",
 
-    fragmentClippingFront:
-        "\
+  fragmentClippingFront:
+    "\
             uniform vec3 color;\
             uniform vec3 clippingLow;\
             uniform vec3 clippingHigh;\
@@ -133,15 +133,15 @@ const CAPSSHADER = {
                 \
             }",
 
-    invisibleVertexShader:
-        "\
+  invisibleVertexShader:
+    "\
             void main() {\
                 vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\
                 gl_Position = projectionMatrix * mvPosition;\
             }",
 
-    invisibleFragmentShader:
-        "\
+  invisibleFragmentShader:
+    "\
             void main( void ) {\
                 gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );\
                 discard;\
@@ -150,62 +150,60 @@ const CAPSSHADER = {
 
 //定材质的集合
 const CAPSMATERIAL = {
-    selectMaterial: new THREE.MeshBasicMaterial({
-        color: "blue",
-        side: "2",
-        opacity: 0.5,
-        transparent: true,
-    }),
+  selectMaterial: new THREE.MeshBasicMaterial({
+    color: "blue",
+    side: "2",
+    opacity: 0.5,
+    transparent: true,
+  }),
 
-    sheet: new THREE.ShaderMaterial({
-        uniforms: CAPSUNIFORMS.clipping,
-        vertexShader: CAPSSHADER.vertexClipping,
-        fragmentShader: CAPSSHADER.fragmentClipping,
-    }),
+  sheet: new THREE.ShaderMaterial({
+    uniforms: CAPSUNIFORMS.clipping,
+    vertexShader: CAPSSHADER.vertexClipping,
+    fragmentShader: CAPSSHADER.fragmentClipping,
+  }),
 
-    cap: new THREE.ShaderMaterial({
-        uniforms: CAPSUNIFORMS.caps,
-        vertexShader: CAPSSHADER.vertex,
-        fragmentShader: CAPSSHADER.fragment,
-    }),
+  cap: new THREE.ShaderMaterial({
+    uniforms: CAPSUNIFORMS.caps,
+    vertexShader: CAPSSHADER.vertex,
+    fragmentShader: CAPSSHADER.fragment,
+  }),
 
-    backStencil: new THREE.ShaderMaterial({
-        uniforms: CAPSUNIFORMS.clipping,
-        vertexShader: CAPSSHADER.vertexClipping,
-        fragmentShader: CAPSSHADER.fragmentClippingFront,
-        colorWrite: false,
-        depthWrite: false,
-        side: THREE.BackSide,
-    }),
+  backStencil: new THREE.ShaderMaterial({
+    uniforms: CAPSUNIFORMS.clipping,
+    vertexShader: CAPSSHADER.vertexClipping,
+    fragmentShader: CAPSSHADER.fragmentClippingFront,
+    colorWrite: false,
+    depthWrite: false,
+    side: THREE.BackSide,
+  }),
 
-    frontStencil: new THREE.ShaderMaterial({
-        uniforms: CAPSUNIFORMS.clipping,
-        vertexShader: CAPSSHADER.vertexClipping,
-        fragmentShader: CAPSSHADER.fragmentClippingFront,
-        colorWrite: false,
-        depthWrite: false,
-    }),
+  frontStencil: new THREE.ShaderMaterial({
+    uniforms: CAPSUNIFORMS.clipping,
+    vertexShader: CAPSSHADER.vertexClipping,
+    fragmentShader: CAPSSHADER.fragmentClippingFront,
+    colorWrite: false,
+    depthWrite: false,
+  }),
 
-    BoxBackFace: new THREE.MeshBasicMaterial({
-        color: 0xc0c0c0,
-        transparent: true,
-        opacity: 0.25,
-    }),
-    BoxWireframe: new THREE.LineBasicMaterial({
-        color: 0x0000ff,
-        linewidth: 2,
-    }),
-    BoxWireActive: new THREE.LineBasicMaterial({
-        color: 0xff0000,
-        linewidth: 4,
-    }),
+  BoxBackFace: new THREE.MeshBasicMaterial({
+    color: 0xc0c0c0,
+    transparent: true,
+    opacity: 0.25,
+  }),
+  BoxWireframe: new THREE.LineBasicMaterial({
+    color: 0x0000ff,
+    linewidth: 2,
+  }),
+  BoxWireActive: new THREE.LineBasicMaterial({
+    color: 0xff0000,
+    linewidth: 4,
+  }),
 
-    Invisible: new THREE.ShaderMaterial({
-        vertexShader: CAPSSHADER.invisibleVertexShader,
-        fragmentShader: CAPSSHADER.invisibleFragmentShader,
-    }),
+  Invisible: new THREE.ShaderMaterial({
+    vertexShader: CAPSSHADER.invisibleVertexShader,
+    fragmentShader: CAPSSHADER.invisibleFragmentShader,
+  }),
 };
 
-export {
-    CAPSMATERIAL, CAPSSHADER
-}
+export { CAPSMATERIAL, CAPSSHADER, CAPSUNIFORMS };
