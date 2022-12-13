@@ -1,6 +1,7 @@
 import THREE_Model from "./js/THREE_Model.js";
 import { GUI } from "./js/jsm/libs/lil-gui.module.min.js";
 import Clipping from "./js/Clipping.js";
+import { ClipBoxNormals, CAPSClipping } from "./js/Clip"
 
 new Vue({
   el: "#three_model",
@@ -37,12 +38,7 @@ new Vue({
       this.raycaster.setFromCamera(pointer, this.threeModel.camera);
       const objectMeshes = this.getSelectModel();
       const intersects = this.raycaster.intersectObjects(objectMeshes, true);
-      var selMaterial = new THREE.MeshBasicMaterial({
-        color: "blue",
-        side: "2",
-        opacity: 0.5,
-        transparent: true,
-      });
+      const selMaterial = Clipping.CAPSMATERIAL.selectMaterial;
 
       if (intersects.length > 0) {
         this.selectMesh = intersects[0];
@@ -50,19 +46,11 @@ new Vue({
       }
     },
     pointerMoive: function (event) {
-      let pointer = new THREE.Vector2();
-      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      let pointer = Clipping.creatPointer(event);
       this.raycaster.setFromCamera(pointer, this.threeModel.camera);
       const objectMeshes = this.getSelectModel();
       const intersects = this.raycaster.intersectObjects(objectMeshes, true);
-      var selMaterial = new THREE.MeshBasicMaterial({
-        color: "blue",
-        side: "2",
-        opacity: 0.5,
-        transparent: true,
-      });
-
+      const selMaterial = Clipping.CAPSMATERIAL.selectMaterial;
       let INTERSECTED = this.INTERSECTED;
       if (intersects.length > 0) {
         if (INTERSECTED != intersects[0].object) {
@@ -138,20 +126,13 @@ new Vue({
       //box.setFromCenterAndSize( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 20000, 10000, 10000 ) );
       box.expandByObject(this.threeModel.mainObject);
       const s = box.getSize();
-
-      const planes = [
-        THREE.Plane(new THREE.Vector3(0, 0, 1), 10000),
-        THREE.Plane(new THREE.Vector3(0, 0, -1), 10000),
-        THREE.Plane(new THREE.Vector3(0, 1, 0), 10000),
-        THREE.Plane(new THREE.Vector3(0, -1, 0), 10000),
-        THREE.Plane(new THREE.Vector3(1, 0, 0), 10000),
-        THREE.Plane(new THREE.Vector3(-1, 0, 0), 10000),
-      ];
-
+      const zoom = 1.05;
+      const normalsA = new ClipBoxNormals();
+      const planes = normalsA.createPlanes(s.x, s.y, s.z,zoom)
       this.threeModel.render.clippingPlanes = planes;
       this.threeModel.render.localClippingEnabled = true;
-      const zoom = 1.05;
-      const clipSelection = new Clipping.CAPSClipping(
+      
+      const clipSelection = new CAPSClipping(
         new THREE.Vector3(-s.x * zoom, -s.y * zoom, -s.z * zoom),
         new THREE.Vector3(s.x * zoom, s.y * zoom, s.z * zoom),
         250000,
@@ -167,20 +148,19 @@ new Vue({
       document
         .getElementById("canvas3d")
         .addEventListener("click", this.pointClick);
-     
-    },
-    clip() {},
-    addGUI() {
-      const gui = new GUI({ title: "Clip" });
-      const model = this.threeModel;
 
+    },
+    clip() { },
+    addGUI(clipTitle = "Clip", stepLimit = 100, min = 100, max = 1000) {
+      const gui = new GUI({ title: clipTitle });
+      const model = this.threeModel;
       const API = {
-        x: 100,
+        x: stepLimit,
       };
       const _this = this;
       gui
         .add(API, "x", 0, 1000, 100)
-        .name("x")
+        .name(clipTitle)
         .onChange(function () {
           const mesh = _this.selectMesh;
           mesh.object.position.x = API.x;
