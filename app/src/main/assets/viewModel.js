@@ -1,5 +1,6 @@
 import THREE_Model from "./js/THREE_Model.js";
 import { GUI } from "./js/jsm/libs/lil-gui.module.min.js";
+import Clipping from "./js/Clipping.js";
 
 new Vue({
   el: "#three_model",
@@ -131,61 +132,52 @@ new Vue({
         .addEventListener("click", this.addSphere);
     },
     creatOutMesh() {
-      const max = new THREE.Vector3(1, 1, 1);
-      const min = new THREE.Vector3(0.5, 0.5, 0.5);
-      const box = new THREE.Box3();
       this.select = 2;
+      window.removeEventListener("pointermove", this.pointerMoive);
+      const box = new THREE.Box3();
       //box.setFromCenterAndSize( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 20000, 10000, 10000 ) );
       box.expandByObject(this.threeModel.mainObject);
-      const material = new THREE.MeshBasicMaterial({
-        color: "red",
-        side: "2",
-        opacity: 0.2,
-        transparent: true,
-      });
-      const mesh = new THREE.Mesh(this.threeModel.mainObject, material);
       const s = box.getSize();
-      const boxGer = new THREE.BoxGeometry(s.x + 2500, s.y + 1500, s.z + 1500);
-      const boxMesh = new THREE.Mesh(boxGer, material);
-      boxMesh.position.x += 800;
-      boxMesh.position.y += 1500;
-      boxMesh.position.z += 500;
-      const helper = new THREE.Box3Helper(box, 0xff0000);
+
       const planes = [
-        { x: new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000), y: s.x },
-        { x: new THREE.Plane(new THREE.Vector3(0, 0, -1), 10000), y: s.x },
-        { x: new THREE.Plane(new THREE.Vector3(0, 1, 0), 10000), y: s.x },
-        { x: new THREE.Plane(new THREE.Vector3(0, -1, 0), 10000), y: s.x },
-        { x: new THREE.Plane(new THREE.Vector3(1, 0, 0), 10000), y: s.x },
-        { x: new THREE.Plane(new THREE.Vector3(-1, 0, 0), 10000), y: s.x },
+        THREE.Plane(new THREE.Vector3(0, 0, 1), 10000),
+        THREE.Plane(new THREE.Vector3(0, 0, -1), 10000),
+        THREE.Plane(new THREE.Vector3(0, 1, 0), 10000),
+        THREE.Plane(new THREE.Vector3(0, -1, 0), 10000),
+        THREE.Plane(new THREE.Vector3(1, 0, 0), 10000),
+        THREE.Plane(new THREE.Vector3(-1, 0, 0), 10000),
       ];
-      var group1 = new THREE.Group();
 
-      planes.forEach(({ x, y }) => {
-        const planHelper = new THREE.PlaneHelper(x, y, 0xffaa00);
-        group1.add(planHelper);
-        this.groupPlan.push(planHelper);
-      });
+      this.threeModel.render.clippingPlanes = planes;
+      this.threeModel.render.localClippingEnabled = true;
+      const zoom = 1.05;
+      const clipSelection = new Clipping.CAPSClipping(
+        new THREE.Vector3(-s.x * zoom, -s.y * zoom, -s.z * zoom),
+        new THREE.Vector3(s.x * zoom, s.y * zoom, s.z * zoom),
+        250000,
+        0.4
+      );
+      this.threeModel.scene.add(clipSelection.displayMeshes);
+      this.threeModel.clipSelection = clipSelection;
+      this.groupPlan = clipSelection.selectables;
 
-      this.mainBox = group1;
-      this.threeModel.scene.add(helper);
-      this.threeModel.scene.add(group1);
-
+      const ssdaf = new Clipping.ClipPicking(this.threeModel);
+      ssdaf.setEventListener(true);
       this.addGUI();
       document
         .getElementById("canvas3d")
         .addEventListener("click", this.pointClick);
-      window.removeEventListener("pointermove", this.pointerMoive);
+     
     },
     clip() {},
     addGUI() {
       const gui = new GUI({ title: "Clip" });
       const model = this.threeModel;
-     
+
       const API = {
         x: 100,
       };
-      const _this =this;
+      const _this = this;
       gui
         .add(API, "x", 0, 1000, 100)
         .name("x")
