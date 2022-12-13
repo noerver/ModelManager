@@ -446,25 +446,28 @@ class ClipPicking {
               value = intersects[0].point.z;
             }
 
-            var vgPlane = null;
+            var vgPlane =  simulation.planesMap.get(axis.toUpperCase());
             var vValue;
+
+
+
             if (axis === "x2") {
-              vgPlane = simulation.clipPlanex1;
+              //vgPlane = simulation.clipPlanex1;
               vValue = value + 0.1;
             } else if (axis === "x1") {
-              vgPlane = simulation.clipPlanex2;
+              //vgPlane = simulation.clipPlanex2;
               vValue = -(value - 0.1);
             } else if (axis === "y1") {
-              vgPlane = simulation.clipPlaney1;
+              //vgPlane = simulation.clipPlaney1;
               vValue = -(value - 0.1);
             } else if (axis === "y2") {
-              vgPlane = simulation.clipPlaney2;
+              //vgPlane = simulation.clipPlaney2;
               vValue = value + 0.1;
             } else if (axis === "z1") {
-              vgPlane = simulation.clipPlanez1;
+              //vgPlane = simulation.clipPlanez1;
               vValue = -(value - 0.1);
             } else if (axis === "z2") {
-              vgPlane = simulation.clipPlanez2;
+              //vgPlane = simulation.clipPlanez2;
               vValue = value + 0.1;
             }
             if (null != vgPlane) vgPlane.constant = vValue;

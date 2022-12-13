@@ -139,14 +139,22 @@ new Vue({
       box.expandByObject(this.threeModel.mainObject);
       const s = box.getSize();
 
-      const planes = [
-        THREE.Plane(new THREE.Vector3(0, 0, 1), 10000),
-        THREE.Plane(new THREE.Vector3(0, 0, -1), 10000),
-        THREE.Plane(new THREE.Vector3(0, 1, 0), 10000),
-        THREE.Plane(new THREE.Vector3(0, -1, 0), 10000),
-        THREE.Plane(new THREE.Vector3(1, 0, 0), 10000),
-        THREE.Plane(new THREE.Vector3(-1, 0, 0), 10000),
-      ];
+      const planeX1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+      const planeX2 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+      const planeY1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+      const planeY2 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+      const planeZ1 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+      const planeZ2 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 10000);
+
+      const planes = [planeX1, planeX2, planeY1, planeY2, planeZ1, planeZ2];
+
+      const planesMap = new Map();
+      planesMap.set("X1", planeX1);
+      planesMap.set("X2", planeX2);
+      planesMap.set("Y1", planeY1);
+      planesMap.set("Y2", planeY2);
+      planesMap.set("Z1", planeZ1);
+      planesMap.set("Z2", planeZ2);
 
       this.threeModel.render.clippingPlanes = planes;
       this.threeModel.render.localClippingEnabled = true;
@@ -159,6 +167,7 @@ new Vue({
       );
       this.threeModel.scene.add(clipSelection.displayMeshes);
       this.threeModel.clipSelection = clipSelection;
+      this.threeModel.planesMap = planesMap;
       this.groupPlan = clipSelection.selectables;
 
       const ssdaf = new Clipping.ClipPicking(this.threeModel);
@@ -167,7 +176,6 @@ new Vue({
       document
         .getElementById("canvas3d")
         .addEventListener("click", this.pointClick);
-     
     },
     clip() {},
     addGUI() {
