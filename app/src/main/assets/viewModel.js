@@ -8,7 +8,7 @@ new Vue({
   el: "#three_model",
   data() {
     return {
-      rootDom:null,
+      rootDom: null,
       threeModel: null,
       spheres: [],
       currentSphere: new THREE.Mesh(),
@@ -103,9 +103,10 @@ new Vue({
       this.select = 1;
     },
     reset() {
-      this.select = 0;
-      this.rootDom.removeEventListener("click", this.alert);
-      this.rootDom.addEventListener("click", this.addSphere.bind(this));
+      window.location.reload();
+      // this.select = 0;
+      // this.rootDom.removeEventListener("click", this.alert);
+      // this.rootDom.addEventListener("click", this.addSphere.bind(this));
     },
     creatOutMesh() {
       this.select = 2;
@@ -114,11 +115,12 @@ new Vue({
       //box.setFromCenterAndSize( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 20000, 10000, 10000 ) );
       box.expandByObject(this.threeModel.mainObject);
       const s = box.getSize();
-      const zoom = 1.05;
+      const zoom = 1;
       const normalsA = new ClipBoxNormals();
       const planes = normalsA.createPlanes(s.x, s.y, s.z, zoom);
-      this.threeModel.render.clippingPlanes = planes;
-      this.threeModel.render.localClippingEnabled = true;
+      this.planes = planes;
+      this.threeModel.renderer.clippingPlanes = planes;
+      this.threeModel.renderer.localClippingEnabled = true;
 
       const clipSelection = new CAPSClipping(
         new THREE.Vector3(-s.x * zoom, -s.y * zoom, -s.z * zoom),
@@ -132,31 +134,35 @@ new Vue({
 
       const ssdaf = new ClipPicking(this.threeModel);
       ssdaf.setEventListener(true);
-      // this.addGUI();
-      // document
-      //   .getElementById("canvas3d")
-      //   .addEventListener("click", this.pointClick);
+      this.gui = new GUI({ title: "Clip",autoPlace:true ,width:200});
+
+      normalsA.planes.forEach((planeItem) => {
+        this.creatPlanGUI(planeItem.name, planeItem.plane);
+      });
     },
-    addGUI(clipTitle = "Clip", stepLimit = 100, min = 100, max = 1000) {
-      const gui = new GUI({ title: clipTitle });
+    creatPlanGUI(name, plane) {
+      const start = plane.constant;
+      this.addGUI(name, plane, -start, start, start);
+    },
+    addGUI(name, plane, min, max, start, stepLimit = 100) {
       const model = this.threeModel;
       const API = {
-        x: stepLimit,
+        x: start,
       };
+      const planes = this.planes;
       const _this = this;
-      gui
-        .add(API, "x", 0, 1000, 100)
-        .name(clipTitle)
-        .onChange(function () {
-          const mesh = _this.selectMesh;
-          mesh.object.position.x = API.x;
+      this.gui
+        .add(API, "x", min, max, stepLimit)
+        .name(name)
+        .onChange(() => {
+          plane.constant = API.x;
           model.render();
         });
     },
   },
   mounted() {
     if (!this.rootDom) {
-      this.rootDom = document.getElementById("canvas3d")
+      this.rootDom = document.getElementById("canvas3d");
     }
     this.threeModel = new THREE_Model("canvas3d");
     this.threeModel.init();
