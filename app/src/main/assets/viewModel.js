@@ -17,6 +17,7 @@ new Vue({
       select: 0,
       groupPlan: [],
       selectMesh: null,
+      rootDom: null
     };
   },
   methods: {
@@ -100,18 +101,15 @@ new Vue({
     loadObject() {
       //
       const fileName = window.localStorage.getItem("model_data");
-      if (fileName) {
-        const filePath = "./FileModel/" + fileName;
-        this.threeModel.loadObject2(filePath);
-        document
-          .getElementById("canvas3d")
-          .removeEventListener("click", this.addSphere);
-        // document
-        //   .getElementById("canvas3d")
-        //   .addEventListener("click", this.addSphere);
+      const filePath = fileName ? "./FileModel/" + fileName : "";
 
-        this.selectPlan();
-      }
+      this.threeModel.loadObject2(filePath);
+      this.rootDom.removeEventListener("click", this.addSphere);
+      // document
+      //   .getElementById("canvas3d")
+      //   .addEventListener("click", this.addSphere);
+
+      this.selectPlan();
     },
     removeSelect() {
       this.select = false;
@@ -173,11 +171,9 @@ new Vue({
       const ssdaf = new Clipping.ClipPicking(this.threeModel);
       ssdaf.setEventListener(true);
       this.addGUI();
-      document
-        .getElementById("canvas3d")
-        .addEventListener("click", this.pointClick);
+      this.rootDom.addEventListener("click", this.pointClick);
     },
-    clip() {},
+    clip() { },
     addGUI() {
       const gui = new GUI({ title: "Clip" });
       const model = this.threeModel;
@@ -197,6 +193,7 @@ new Vue({
     },
   },
   mounted() {
+    this.rootDom = document.getElementById("canvas3d");
     this.threeModel = new THREE_Model("canvas3d");
     this.threeModel.init();
     this.loadObject();
