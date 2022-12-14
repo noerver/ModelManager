@@ -74,7 +74,7 @@ new Vue({
       } else {
         if (INTERSECTED) INTERSECTED.material = INTERSECTED.currentMterial;
         INTERSECTED = null;
-        this.intersectObjects = null;
+        //this.intersectObjects = null;
       }
     },
     addSphere(event) {
@@ -88,10 +88,9 @@ new Vue({
       window.addEventListener("pointermove", this.pointerMoive);
     },
     loadObject() {
-      //
       const fileName = window.localStorage.getItem("model_data");
       const filePath = fileName ? "./FileModel/" + fileName : "";
-      this.threeModel.loadObject2(filePath);
+      this.threeModel.loadObject(filePath);
       this.rootDom.removeEventListener("click", this.addSphere);
       this.selectPlan();
     },
@@ -104,41 +103,75 @@ new Vue({
     },
     reset() {
       window.location.reload();
-      // this.select = 0;
-      // this.rootDom.removeEventListener("click", this.alert);
-      // this.rootDom.addEventListener("click", this.addSphere.bind(this));
     },
-    creatOutMesh() {
-      this.select = 2;
-      window.removeEventListener("pointermove", this.pointerMoive);
+    setClipPlanes() {
       const box = new THREE.Box3();
-      //box.setFromCenterAndSize( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 20000, 10000, 10000 ) );
       box.expandByObject(this.threeModel.mainObject);
-      const s = box.getSize();
+      const boxSize = box.getSize();
       const zoom = 1;
-      const normalsA = new ClipBoxNormals();
-      const planes = normalsA.createPlanes(s.x, s.y, s.z, zoom);
+      this.clipBoxNormals = new ClipBoxNormals();
+      const planes = this.clipBoxNormals.createPlanes(
+        boxSize.x,
+        boxSize.y,
+        boxSize.z,
+        zoom
+      );
       this.planes = planes;
       this.threeModel.renderer.clippingPlanes = planes;
       this.threeModel.renderer.localClippingEnabled = true;
-
+      this.creatOutMesh(boxSize, zoom);
+    },
+    creatOutMesh(boxSize, zoom) {
       const clipSelection = new CAPSClipping(
-        new THREE.Vector3(-s.x * zoom, -s.y * zoom, -s.z * zoom),
-        new THREE.Vector3(s.x * zoom, s.y * zoom, s.z * zoom),
+        new THREE.Vector3(
+          -boxSize.x * zoom,
+          -boxSize.y * zoom,
+          -boxSize.z * zoom
+        ),
+        new THREE.Vector3(boxSize.x * zoom, boxSize.y * zoom, boxSize.z * zoom),
         250000,
         0.4
       );
+
       this.threeModel.scene.add(clipSelection.displayMeshes);
       this.threeModel.clipSelection = clipSelection;
-      this.groupPlan = clipSelection.selectables;
-
-      const ssdaf = new ClipPicking(this.threeModel);
-      ssdaf.setEventListener(true);
-      this.gui = new GUI({ title: "Clip",autoPlace:true ,width:200});
-
-      normalsA.planes.forEach((planeItem) => {
+    },
+    setGUI() {
+      this.gui = new GUI({ title: "Clip", autoPlace: true, width: 200 });
+      this.clipBoxNormals.planes.forEach((planeItem) => {
         this.creatPlanGUI(planeItem.name, planeItem.plane);
       });
+    },
+    setClip() {
+      window.removeEventListener("pointermove", this.pointerMoive);
+      this.setClipPlanes();
+      this.setGUI();
+    },
+    openDetail() {
+      //构建信息表的打开和数据获取
+      if (this.intersectObjects) {
+        $("#layer_content").window({
+          width: 400,
+          height: 400,
+          modal: true,
+          closable: true,
+        });
+        $("#layer_content").window("open");
+        $("#layer_content").html("");
+        $("#layer_content").append("Detail");
+        const tableData = document.createElement("table"); //动态创建table表格
+        tableData.border = "1";
+        const obj = this.intersectObjects;
+        for (var item in obj.object.userData) {
+          var currentRow = tableData.insertRow(-1);
+          var tableTd = currentRow.insertCell(-1);
+          tableTd.innerHTML = item;
+          currentRow.insertCell(-1).innerHTML = obj.object.userData[item];
+        }
+        $("#layer_content").append(tableData);
+      } else {
+        $("#layer_content").window("close");
+      }
     },
     creatPlanGUI(name, plane) {
       const start = plane.constant;
