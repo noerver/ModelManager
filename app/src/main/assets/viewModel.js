@@ -8,6 +8,7 @@ new Vue({
   el: "#three_model",
   data() {
     return {
+      rootDom:null,
       threeModel: null,
       spheres: [],
       currentSphere: new THREE.Mesh(),
@@ -89,36 +90,22 @@ new Vue({
     loadObject() {
       //
       const fileName = window.localStorage.getItem("model_data");
-      if (fileName) {
-        const filePath = "./FileModel/" + fileName;
-        this.threeModel.loadObject2(filePath);
-        document
-          .getElementById("canvas3d")
-          .removeEventListener("click", this.addSphere);
-        // document
-        //   .getElementById("canvas3d")
-        //   .addEventListener("click", this.addSphere);
-
-        this.selectPlan();
-      }
+      const filePath = fileName ? "./FileModel/" + fileName : "";
+      this.threeModel.loadObject2(filePath);
+      this.rootDom.removeEventListener("click", this.addSphere);
+      this.selectPlan();
     },
     removeSelect() {
       this.select = false;
-      document
-        .getElementById("canvas3d")
-        .removeEventListener("click", this.addSphere);
+      this.rootDom.removeEventListener("click", this.addSphere);
     },
     setPointModel() {
       this.select = 1;
     },
     reset() {
       this.select = 0;
-      document
-        .getElementById("canvas3d")
-        .removeEventListener("click", this.alert);
-      document
-        .getElementById("canvas3d")
-        .addEventListener("click", this.addSphere);
+      this.rootDom.removeEventListener("click", this.alert);
+      this.rootDom.addEventListener("click", this.addSphere.bind(this));
     },
     creatOutMesh() {
       this.select = 2;
@@ -150,7 +137,6 @@ new Vue({
       //   .getElementById("canvas3d")
       //   .addEventListener("click", this.pointClick);
     },
-    clip() {},
     addGUI(clipTitle = "Clip", stepLimit = 100, min = 100, max = 1000) {
       const gui = new GUI({ title: clipTitle });
       const model = this.threeModel;
@@ -169,6 +155,9 @@ new Vue({
     },
   },
   mounted() {
+    if (!this.rootDom) {
+      this.rootDom = document.getElementById("canvas3d")
+    }
     this.threeModel = new THREE_Model("canvas3d");
     this.threeModel.init();
     this.loadObject();
